@@ -1,116 +1,149 @@
-# import renderables.buttons.BlackKey
-# import renderables.buttons.WhiteKey
-# import renderables.buttons.OctaveUp
-# import renderables.buttons.OctaveDown
-class KeyboardPannel extends PIXI.Sprite
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS202: Simplify dynamic range loops
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.buttons.BlackKey
+// import renderables.buttons.WhiteKey
+// import renderables.buttons.OctaveUp
+// import renderables.buttons.OctaveDown
+class KeyboardPannel extends PIXI.Sprite {
 
-    constructor: ->
-        super()
+    constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onNoteOn = this.onNoteOn.bind(this);
+        this.onNoteOff = this.onNoteOff.bind(this);
+        super();
 
-        App.NOTE_ON.add @onNoteOn
-        App.NOTE_OFF.add @onNoteOff
+        App.NOTE_ON.add(this.onNoteOn);
+        App.NOTE_OFF.add(this.onNoteOff);
 
-        @firstKeyCode = 48
-        @keycode = @firstKeyCode
+        this.firstKeyCode = 48;
+        this.keycode = this.firstKeyCode;
 
-        @graphics = new PIXI.Graphics()
-        @addChild @graphics
+        this.graphics = new PIXI.Graphics();
+        this.addChild(this.graphics);
 
-        # keys
-        @keys = new PIXI.Container()
-        @keys.y = AppData.SETTINGS_PANNEL_HEIGHT
-        @addChild @keys
+        // keys
+        this.keys = new PIXI.Container();
+        this.keys.y = AppData.SETTINGS_PANNEL_HEIGHT;
+        this.addChild(this.keys);
 
-        @hitArea = new PIXI.Rectangle 0, 100*AppData.RATIO, AppData.WIDTH, AppData.KEYBOARD_PANNEL_HEIGHT
+        this.hitArea = new PIXI.Rectangle(0, 100*AppData.RATIO, AppData.WIDTH, AppData.KEYBOARD_PANNEL_HEIGHT);
+    }
 
-    resize: ->
-        @graphics.clear()
-        @graphics.beginFill 0x232323, 0.97
-        @graphics.moveTo 0, AppData.SETTINGS_PANNEL_HEIGHT
-        @graphics.lineTo AppData.WIDTH, AppData.SETTINGS_PANNEL_HEIGHT
-        @graphics.lineTo AppData.WIDTH, AppData.SETTINGS_PANNEL_HEIGHT + AppData.KEYBOARD_PANNEL_HEIGHT
-        @graphics.lineTo 0, AppData.SETTINGS_PANNEL_HEIGHT + AppData.KEYBOARD_PANNEL_HEIGHT
-        @graphics.lineTo 0, 0
-        @graphics.endFill()
+    resize() {
+        this.graphics.clear();
+        this.graphics.beginFill(0x232323, 0.97);
+        this.graphics.moveTo(0, AppData.SETTINGS_PANNEL_HEIGHT);
+        this.graphics.lineTo(AppData.WIDTH, AppData.SETTINGS_PANNEL_HEIGHT);
+        this.graphics.lineTo(AppData.WIDTH, AppData.SETTINGS_PANNEL_HEIGHT + AppData.KEYBOARD_PANNEL_HEIGHT);
+        this.graphics.lineTo(0, AppData.SETTINGS_PANNEL_HEIGHT + AppData.KEYBOARD_PANNEL_HEIGHT);
+        this.graphics.lineTo(0, 0);
+        this.graphics.endFill();
 
-        @removeKeys()
-        @addKeys()
-        null
+        this.removeKeys();
+        this.addKeys();
+        return null;
+    }
 
-    removeKeys: ->
-        for i in [0...@keys.children.length]
-            child = @keys.children[0]
-            child.disable()
-            @keys.removeChild child
-        null
+    removeKeys() {
+        for (let i = 0, end = this.keys.children.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const child = this.keys.children[0];
+            child.disable();
+            this.keys.removeChild(child);
+        }
+        return null;
+    }
 
-    addKeys: ->
-        @kw = 72 * AppData.RATIO
-        @kh = 170 * AppData.RATIO
-        @kr = 72 * AppData.RATIO
-        @p = 100 * AppData.RATIO
+    addKeys() {
+        this.kw = 72 * AppData.RATIO;
+        this.kh = 170 * AppData.RATIO;
+        this.kr = 72 * AppData.RATIO;
+        this.p = 100 * AppData.RATIO;
 
-        availableWidth = AppData.WIDTH - (110*AppData.RATIO) - AppData.PADDING
-        initialX = (110*AppData.RATIO)
-        # random number added
-        total = Math.floor( availableWidth / (@kw+8*AppData.RATIO) )
+        const availableWidth = AppData.WIDTH - (110*AppData.RATIO) - AppData.PADDING;
+        const initialX = (110*AppData.RATIO);
+        // random number added
+        const total = Math.floor( availableWidth / (this.kw+(8*AppData.RATIO)) );
 
-        availableFluid = availableWidth - (@kw*total)
+        const availableFluid = availableWidth - (this.kw*total);
 
-        @keycode = @firstKeyCode
-        fluid = availableFluid/total
-        for i in [0...total]
+        this.keycode = this.firstKeyCode;
+        const fluid = availableFluid/total;
+        for (let i = 0, end = total, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
 
-            if i%7 is 0 or ((i+4)%7) is 0
-                if i isnt 0
-                    @keycode--
+            if (((i%7) === 0) || (((i+4)%7) === 0)) {
+                if (i !== 0) {
+                    this.keycode--;
+                }
+            }
 
-            w = new WhiteKey()
-            w.code = @keycode
-            w.enable()
-            w.x = initialX + (@kw+fluid) * i
-            w.y = AppData.KEYBOARD_PANNEL_HEIGHT - @kh - AppData.PADDING
-            @keys.addChild w
+            const w = new WhiteKey();
+            w.code = this.keycode;
+            w.enable();
+            w.x = initialX + ((this.kw+fluid) * i);
+            w.y = AppData.KEYBOARD_PANNEL_HEIGHT - this.kh - AppData.PADDING;
+            this.keys.addChild(w);
 
-            @keycode += 2
+            this.keycode += 2;
 
-            if i%7 is 0 or ((i+4)%7) is 0
-                continue
+            if (((i%7) === 0) || (((i+4)%7) === 0)) {
+                continue;
+            }
 
-            b = new BlackKey()
-            b.code = @keycode-3
-            b.enable()
-            b.x = w.x - @kr/2
-            b.y = w.y - @p
-            @keys.addChild b
+            const b = new BlackKey();
+            b.code = this.keycode-3;
+            b.enable();
+            b.x = w.x - (this.kr/2);
+            b.y = w.y - this.p;
+            this.keys.addChild(b);
+        }
 
-        # octaves
-        @octaveUp = new OctaveUp();
-        @octaveUp.x = AppData.PADDING - (@octaveUp.width-AppData.ICON_SIZE_1)/2
-        @octaveUp.y = AppData.KEYBOARD_PANNEL_HEIGHT - @kh - AppData.PADDING - @p
-        @keys.addChild @octaveUp
+        // octaves
+        this.octaveUp = new OctaveUp();
+        this.octaveUp.x = AppData.PADDING - ((this.octaveUp.width-AppData.ICON_SIZE_1)/2);
+        this.octaveUp.y = AppData.KEYBOARD_PANNEL_HEIGHT - this.kh - AppData.PADDING - this.p;
+        this.keys.addChild(this.octaveUp);
 
-        @octaveDown = new OctaveDown();
-        @octaveDown.x = AppData.PADDING - (@octaveUp.width-AppData.ICON_SIZE_1)/2
-        @octaveDown.y = AppData.KEYBOARD_PANNEL_HEIGHT - @kh - AppData.PADDING
-        @keys.addChild @octaveDown
-        null
+        this.octaveDown = new OctaveDown();
+        this.octaveDown.x = AppData.PADDING - ((this.octaveUp.width-AppData.ICON_SIZE_1)/2);
+        this.octaveDown.y = AppData.KEYBOARD_PANNEL_HEIGHT - this.kh - AppData.PADDING;
+        this.keys.addChild(this.octaveDown);
+        return null;
+    }
 
-    onNoteOn: (data) =>
-        key = @findKey data.note
-        if key
-            key.select()
-        null
+    onNoteOn(data) {
+        const key = this.findKey(data.note);
+        if (key) {
+            key.select();
+        }
+        return null;
+    }
 
-    onNoteOff: (data) =>
-        key = @findKey data.note
-        if key
-            key.unselect()
-        null
+    onNoteOff(data) {
+        const key = this.findKey(data.note);
+        if (key) {
+            key.unselect();
+        }
+        return null;
+    }
 
-    findKey: (code) ->
-        for i in [0...@keys.children.length]
-            key = @keys.children[i]
-            if key.code is code
-                return key
-        null
+    findKey(code) {
+        for (let i = 0, end = this.keys.children.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const key = this.keys.children[i];
+            if (key.code === code) {
+                return key;
+            }
+        }
+        return null;
+    }
+}

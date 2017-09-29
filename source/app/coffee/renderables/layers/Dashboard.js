@@ -1,277 +1,333 @@
-# import core.View
-# import renderables.Background
-# import renderables.components.*
-# import utils.*
-class Dashboard extends View
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS202: Simplify dynamic range loops
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import core.View
+// import renderables.Background
+// import renderables.components.*
+// import utils.*
+class Dashboard extends View {
 
-    constructor: ->
-        super()
-
-        App.ADD.add @onAdd
-        App.REMOVE.add @onRemove
-
-        @canvasSizeW = window.screen.availWidth * 2 * AppData.RATIO
-        @canvasSizeH = window.screen.availHeight * 2 * AppData.RATIO
-
-        @background = new Background()
-        @addChild @background
-
-        @lineGraphics = new PIXI.Graphics()
-        @lineGraphics.alpha = AppData.LINE_ALPHA
-        @addChild @lineGraphics
-
-        @graphics = new PIXI.Graphics()
-        @addChild @graphics
-
-        @holder = new PIXI.Container()
-        @addChild @holder
-
-        @draggable = new DraggableElement @background
-        @draggable.position.x = (@canvasSizeW-AppData.WIDTH)/-2
-        @draggable.position.y = (@canvasSizeH-AppData.HEIGHT)/-2
-
-        @physics = new PhysicsEngine @canvasSizeW, @canvasSizeH, false
-        @physics.init()
-
-        @center = new Vec2()
-
-        # is mouse down? used on move
-        @mouseDown = false
-        # used in down and move to identify if its a click or a up event
-        @isClick = false
-        # stored session_uid on mouse down if clicked on a body
-        @downBody = null
-
-        if Modernizr.touch
-            @background.on 'touchstart', @onBackgroundDown
-            @background.on 'touchmove', @onBackgroundMove
-            @background.on 'touchend', @onBackgroundUp
-            @background.on 'touchendoutside', @onBackgroundUp
-        else
-            @background.on 'mousedown', @onBackgroundDown
-            @background.on 'mousemove', @onBackgroundMove
-            @background.on 'mouseup', @onBackgroundUp
-            @background.on 'mouseupoutside', @onBackgroundUp
-
-        @components = []
-        @positions = []
-
-        if AppData.SHOW_KEYBOARD_PANNEL
-            @draggable.position.y -= AppData.KEYBOARD_PANNEL_HEIGHT/2
-
-    onBackgroundDown: (e) =>
-        @mouseDown = true
-        @isClick = true
-        @draggable.lock = true
-
-        x = e.data.global.x - @draggable.position.x - @x
-        y = e.data.global.y - @draggable.position.y - @y
-        @downBody = @physics.down x, y
-
-        if @downBody is null
-            App.TOGGLE_SETTINGS_PANNEL_HEIGHT.dispatch { type: false }
-            @draggable.lock = false
-
-        AppData.SHOW_MENU_PANNEL = false
-        App.TOGGLE_MENU.dispatch { width: 0 }
-        null
-
-    onBackgroundMove: (e) =>
-        if @mouseDown
-            @isClick = false
-
-            x = e.data.global.x - @draggable.position.x - @x
-            y = e.data.global.y - @draggable.position.y - @y
-            @physics.move x, y
-        null
-
-    onBackgroundUp: (e) =>
-        x = e.data.global.x - @draggable.position.x - @x
-        y = e.data.global.y - @draggable.position.y - @y
-        @physics.up x, y
-
-        if @downBody isnt null
-            xxx = Math.round ((@downBody.GetPosition().x * @physics.worldScale) + @draggable.position.x) - (AppData.WIDTH/2)
-            yyy = Math.round ((@downBody.GetPosition().y * @physics.worldScale) + @draggable.position.y) - (AppData.HEIGHT/2)
-
-            # avoiding pixi to fire when I click the HTML
-            if @mouseDown
-                App.AUTO_SAVE.dispatch {
-                    component_session_uid: @downBody.GetUserData().uid,
-                    x: xxx
-                    y: yyy
-                }
-        @mouseDown = false
-        @draggable.lock = false
-
-        if @downBody isnt null and @isClick
-            App.TOGGLE_SETTINGS_PANNEL_HEIGHT.dispatch {
-                type: true
-                component_session_uid: @downBody.GetUserData().uid
-            }
-            @downBody = null
-        null
-
-    onResize: =>
-        @background.width = AppData.WIDTH
-        @background.height = AppData.HEIGHT
-        @draggable.resize AppData.WIDTH, AppData.HEIGHT, @canvasSizeW, @canvasSizeH
-        null
-
-    onAdd: (data) =>
-        @center.x = AppData.WIDTH/2 - @draggable.position.x
-        @center.y = AppData.HEIGHT/2 - @draggable.position.y
-        # if AppData.SHOW_KEYBOARD_PANNEL
-            # @center.y = (AppData.HEIGHT - AppData.KEYBOARD_PANNEL_HEIGHT) / 2  - @draggable.position.y
-        @add data
-        null
-
-    onRemove: (data) =>
-        @remove data
-        null
-
-    add: (data) ->
-        switch data.type_uid
-            when AppData.COMPONENTS.NSG then shape = new ComponentNsg data.component_session_uid
-            when AppData.COMPONENTS.OSC then shape = new ComponentOsc data.component_session_uid
-            when AppData.COMPONENTS.ENV then shape = new ComponentEnv data.component_session_uid
-            when AppData.COMPONENTS.FLT then shape = new ComponentFlt data.component_session_uid
-            when AppData.COMPONENTS.PTG then shape = new ComponentPtg data.component_session_uid
-            when AppData.COMPONENTS.LFO then shape = new ComponentLfo data.component_session_uid
-            else
-                return
-
-        shape.onAdd()
-
-        # attach box2d object to shape (for positioning)
-        shape.box2d = @physics.createCustom( shape.vertices, @center.x + data.x, @center.y + data.y, Box2D.Dynamics.b2Body.b2_dynamicBody );
-        # attached component session id, for clicks logic
-        shape.box2d.SetUserData {
-            uid: shape.component_session_uid
+    constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
         }
-        @components.push shape
-        @holder.addChild shape
+        this.onBackgroundDown = this.onBackgroundDown.bind(this);
+        this.onBackgroundMove = this.onBackgroundMove.bind(this);
+        this.onBackgroundUp = this.onBackgroundUp.bind(this);
+        this.onResize = this.onResize.bind(this);
+        this.onAdd = this.onAdd.bind(this);
+        this.onRemove = this.onRemove.bind(this);
+        super();
 
-        xxx = Math.round ((shape.box2d.GetPosition().x * @physics.worldScale) + @draggable.position.x) - (AppData.WIDTH/2)
-        yyy = Math.round ((shape.box2d.GetPosition().y * @physics.worldScale) + @draggable.position.y) - (AppData.HEIGHT/2)
-        null
+        App.ADD.add(this.onAdd);
+        App.REMOVE.add(this.onRemove);
 
-    remove: (data) ->
-        App.TOGGLE_SETTINGS_PANNEL_HEIGHT.dispatch { type: false }
-        for i in [0...@components.length]
-            component = @components[i]
+        this.canvasSizeW = window.screen.availWidth * 2 * AppData.RATIO;
+        this.canvasSizeH = window.screen.availHeight * 2 * AppData.RATIO;
 
-            if component.component_session_uid is data.component_session_uid
-                @components.splice i, 1
+        this.background = new Background();
+        this.addChild(this.background);
 
-                component.onRemove =>
-                    @holder.removeChild component
+        this.lineGraphics = new PIXI.Graphics();
+        this.lineGraphics.alpha = AppData.LINE_ALPHA;
+        this.addChild(this.lineGraphics);
 
-                    @physics.destroy component.box2d
+        this.graphics = new PIXI.Graphics();
+        this.addChild(this.graphics);
 
-                    delete Session.SETTINGS[data.component_session_uid]
-                break
-        null
+        this.holder = new PIXI.Container();
+        this.addChild(this.holder);
 
-    update: ->
-        @graphics.clear()
+        this.draggable = new DraggableElement(this.background);
+        this.draggable.position.x = (this.canvasSizeW-AppData.WIDTH)/-2;
+        this.draggable.position.y = (this.canvasSizeH-AppData.HEIGHT)/-2;
 
-        @draggable.update()
-        @draggable.constrainToBounds()
+        this.physics = new PhysicsEngine(this.canvasSizeW, this.canvasSizeH, false);
+        this.physics.init();
 
-        @background.update @draggable.position, @draggable.zoom
-        @physics.update()
+        this.center = new Vec2();
 
-        @positions = []
+        // is mouse down? used on move
+        this.mouseDown = false;
+        // used in down and move to identify if its a click or a up event
+        this.isClick = false;
+        // stored session_uid on mouse down if clicked on a body
+        this.downBody = null;
 
-        # gets data from box2D and position shapes
-        for i in [0...@components.length]
-            shape = @components[i]
+        if (Modernizr.touch) {
+            this.background.on('touchstart', this.onBackgroundDown);
+            this.background.on('touchmove', this.onBackgroundMove);
+            this.background.on('touchend', this.onBackgroundUp);
+            this.background.on('touchendoutside', this.onBackgroundUp);
+        } else {
+            this.background.on('mousedown', this.onBackgroundDown);
+            this.background.on('mousemove', this.onBackgroundMove);
+            this.background.on('mouseup', this.onBackgroundUp);
+            this.background.on('mouseupoutside', this.onBackgroundUp);
+        }
 
-            pos = shape.box2d.GetPosition()
-            rot = shape.box2d.GetAngle()
+        this.components = [];
+        this.positions = [];
 
-            shape.x = @draggable.position.x + (pos.x * @physics.worldScale)
-            shape.y = @draggable.position.y + (pos.y * @physics.worldScale)
-            shape.rotation = rot
+        if (AppData.SHOW_KEYBOARD_PANNEL) {
+            this.draggable.position.y -= AppData.KEYBOARD_PANNEL_HEIGHT/2;
+        }
+    }
 
-            # position
-            x = shape.x
-            y = shape.y
+    onBackgroundDown(e) {
+        this.mouseDown = true;
+        this.isClick = true;
+        this.draggable.lock = true;
 
-            # limits
-            lw = AppData.WIDTH
-            lh = AppData.HEIGHT
+        const x = e.data.global.x - this.draggable.position.x - this.x;
+        const y = e.data.global.y - this.draggable.position.y - this.y;
+        this.downBody = this.physics.down(x, y);
 
-            # color
-            color = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
+        if (this.downBody === null) {
+            App.TOGGLE_SETTINGS_PANNEL_HEIGHT.dispatch({ type: false });
+            this.draggable.lock = false;
+        }
 
-            # constrains
-            if x < 0
-                x = 0
-            if x > lw
-                x = AppData.WIDTH
-            if y < 0
-                y = 0
-            if y > lh
-                y = AppData.HEIGHT
+        AppData.SHOW_MENU_PANNEL = false;
+        App.TOGGLE_MENU.dispatch({ width: 0 });
+        return null;
+    }
 
-            if x <= 0 or x >= lw or y <= 0 or y >= lh
-                @graphics.lineStyle(0);
-                @graphics.beginFill(color);
-                @graphics.drawCircle(x, y, AppData.MINIMAP);
-                @graphics.endFill();
+    onBackgroundMove(e) {
+        if (this.mouseDown) {
+            this.isClick = false;
 
-            # adds position per component_session_uid to be used to draw lines
-            @positions[shape.component_session_uid] = {
-                x: x,
-                y: y
+            const x = e.data.global.x - this.draggable.position.x - this.x;
+            const y = e.data.global.y - this.draggable.position.y - this.y;
+            this.physics.move(x, y);
+        }
+        return null;
+    }
+
+    onBackgroundUp(e) {
+        const x = e.data.global.x - this.draggable.position.x - this.x;
+        const y = e.data.global.y - this.draggable.position.y - this.y;
+        this.physics.up(x, y);
+
+        if (this.downBody !== null) {
+            const xxx = Math.round(((this.downBody.GetPosition().x * this.physics.worldScale) + this.draggable.position.x) - (AppData.WIDTH/2));
+            const yyy = Math.round(((this.downBody.GetPosition().y * this.physics.worldScale) + this.draggable.position.y) - (AppData.HEIGHT/2));
+
+            // avoiding pixi to fire when I click the HTML
+            if (this.mouseDown) {
+                App.AUTO_SAVE.dispatch({
+                    component_session_uid: this.downBody.GetUserData().uid,
+                    x: xxx,
+                    y: yyy
+                });
+            }
+        }
+        this.mouseDown = false;
+        this.draggable.lock = false;
+
+        if ((this.downBody !== null) && this.isClick) {
+            App.TOGGLE_SETTINGS_PANNEL_HEIGHT.dispatch({
+                type: true,
+                component_session_uid: this.downBody.GetUserData().uid
+            });
+            this.downBody = null;
+        }
+        return null;
+    }
+
+    onResize() {
+        this.background.width = AppData.WIDTH;
+        this.background.height = AppData.HEIGHT;
+        this.draggable.resize(AppData.WIDTH, AppData.HEIGHT, this.canvasSizeW, this.canvasSizeH);
+        return null;
+    }
+
+    onAdd(data) {
+        this.center.x = (AppData.WIDTH/2) - this.draggable.position.x;
+        this.center.y = (AppData.HEIGHT/2) - this.draggable.position.y;
+        // if AppData.SHOW_KEYBOARD_PANNEL
+            // @center.y = (AppData.HEIGHT - AppData.KEYBOARD_PANNEL_HEIGHT) / 2  - @draggable.position.y
+        this.add(data);
+        return null;
+    }
+
+    onRemove(data) {
+        this.remove(data);
+        return null;
+    }
+
+    add(data) {
+        let shape;
+        switch (data.type_uid) {
+            case AppData.COMPONENTS.NSG: shape = new ComponentNsg(data.component_session_uid); break;
+            case AppData.COMPONENTS.OSC: shape = new ComponentOsc(data.component_session_uid); break;
+            case AppData.COMPONENTS.ENV: shape = new ComponentEnv(data.component_session_uid); break;
+            case AppData.COMPONENTS.FLT: shape = new ComponentFlt(data.component_session_uid); break;
+            case AppData.COMPONENTS.PTG: shape = new ComponentPtg(data.component_session_uid); break;
+            case AppData.COMPONENTS.LFO: shape = new ComponentLfo(data.component_session_uid); break;
+            default:
+                return;
+        }
+
+        shape.onAdd();
+
+        // attach box2d object to shape (for positioning)
+        shape.box2d = this.physics.createCustom( shape.vertices, this.center.x + data.x, this.center.y + data.y, Box2D.Dynamics.b2Body.b2_dynamicBody );
+        // attached component session id, for clicks logic
+        shape.box2d.SetUserData({
+            uid: shape.component_session_uid
+        });
+        this.components.push(shape);
+        this.holder.addChild(shape);
+
+        const xxx = Math.round(((shape.box2d.GetPosition().x * this.physics.worldScale) + this.draggable.position.x) - (AppData.WIDTH/2));
+        const yyy = Math.round(((shape.box2d.GetPosition().y * this.physics.worldScale) + this.draggable.position.y) - (AppData.HEIGHT/2));
+        return null;
+    }
+
+    remove(data) {
+        App.TOGGLE_SETTINGS_PANNEL_HEIGHT.dispatch({ type: false });
+        for (let i = 0, end = this.components.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            var component = this.components[i];
+
+            if (component.component_session_uid === data.component_session_uid) {
+                this.components.splice(i, 1);
+
+                component.onRemove(() => {
+                    this.holder.removeChild(component);
+
+                    this.physics.destroy(component.box2d);
+
+                    return delete Session.SETTINGS[data.component_session_uid];
+            });
+                break;
+            }
+        }
+        return null;
+    }
+
+    update() {
+        this.graphics.clear();
+
+        this.draggable.update();
+        this.draggable.constrainToBounds();
+
+        this.background.update(this.draggable.position, this.draggable.zoom);
+        this.physics.update();
+
+        this.positions = [];
+
+        // gets data from box2D and position shapes
+        for (let i = 0, end = this.components.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const shape = this.components[i];
+
+            const pos = shape.box2d.GetPosition();
+            const rot = shape.box2d.GetAngle();
+
+            shape.x = this.draggable.position.x + (pos.x * this.physics.worldScale);
+            shape.y = this.draggable.position.y + (pos.y * this.physics.worldScale);
+            shape.rotation = rot;
+
+            // position
+            let { x } = shape;
+            let { y } = shape;
+
+            // limits
+            const lw = AppData.WIDTH;
+            const lh = AppData.HEIGHT;
+
+            // color
+            const color = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid];
+
+            // constrains
+            if (x < 0) {
+                x = 0;
+            }
+            if (x > lw) {
+                x = AppData.WIDTH;
+            }
+            if (y < 0) {
+                y = 0;
+            }
+            if (y > lh) {
+                y = AppData.HEIGHT;
             }
 
-        @renderLines()
-        null
+            if ((x <= 0) || (x >= lw) || (y <= 0) || (y >= lh)) {
+                this.graphics.lineStyle(0);
+                this.graphics.beginFill(color);
+                this.graphics.drawCircle(x, y, AppData.MINIMAP);
+                this.graphics.endFill();
+            }
 
-    renderLines: ->
-        @lineGraphics.clear()
+            // adds position per component_session_uid to be used to draw lines
+            this.positions[shape.component_session_uid] = {
+                x,
+                y
+            };
+        }
 
-        for i in [0...@components.length]
-            shape = @components[i]
+        this.renderLines();
+        return null;
+    }
 
-            if Session.SETTINGS[shape.component_session_uid].audioCapable is true
-                env = Session.SETTINGS[shape.component_session_uid].connections.ENV
-                ptg = Session.SETTINGS[shape.component_session_uid].connections.PTG
-                lfo = Session.SETTINGS[shape.component_session_uid].connections.LFO
-                flt = Session.SETTINGS[shape.component_session_uid].connections.FLT
+    renderLines() {
+        this.lineGraphics.clear();
 
-                if env
-                    # colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
-                    @lineGraphics.beginFill(0, 0);
-                    @lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
-                    @lineGraphics.moveTo(@positions[shape.component_session_uid].x, @positions[shape.component_session_uid].y);
-                    @lineGraphics.lineTo(@positions[env].x, @positions[env].y);
-                    @lineGraphics.endFill();
+        for (let i = 0, end = this.components.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const shape = this.components[i];
 
-                if ptg
-                    # colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
-                    @lineGraphics.beginFill(0, 0);
-                    @lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
-                    @lineGraphics.moveTo(@positions[shape.component_session_uid].x, @positions[shape.component_session_uid].y);
-                    @lineGraphics.lineTo(@positions[ptg].x, @positions[ptg].y);
-                    @lineGraphics.endFill();
+            if (Session.SETTINGS[shape.component_session_uid].audioCapable === true) {
+                const env = Session.SETTINGS[shape.component_session_uid].connections.ENV;
+                const ptg = Session.SETTINGS[shape.component_session_uid].connections.PTG;
+                const lfo = Session.SETTINGS[shape.component_session_uid].connections.LFO;
+                const flt = Session.SETTINGS[shape.component_session_uid].connections.FLT;
 
-                if lfo
-                    # colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
-                    @lineGraphics.beginFill(0, 0);
-                    @lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
-                    @lineGraphics.moveTo(@positions[shape.component_session_uid].x, @positions[shape.component_session_uid].y);
-                    @lineGraphics.lineTo(@positions[lfo].x, @positions[lfo].y);
-                    @lineGraphics.endFill();
+                if (env) {
+                    // colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
+                    this.lineGraphics.beginFill(0, 0);
+                    this.lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
+                    this.lineGraphics.moveTo(this.positions[shape.component_session_uid].x, this.positions[shape.component_session_uid].y);
+                    this.lineGraphics.lineTo(this.positions[env].x, this.positions[env].y);
+                    this.lineGraphics.endFill();
+                }
 
-                if flt
-                    # colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
-                    @lineGraphics.beginFill(0, 0);
-                    @lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
-                    @lineGraphics.moveTo(@positions[shape.component_session_uid].x, @positions[shape.component_session_uid].y);
-                    @lineGraphics.lineTo(@positions[flt].x, @positions[flt].y);
-                    @lineGraphics.endFill();
-        null
+                if (ptg) {
+                    // colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
+                    this.lineGraphics.beginFill(0, 0);
+                    this.lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
+                    this.lineGraphics.moveTo(this.positions[shape.component_session_uid].x, this.positions[shape.component_session_uid].y);
+                    this.lineGraphics.lineTo(this.positions[ptg].x, this.positions[ptg].y);
+                    this.lineGraphics.endFill();
+                }
+
+                if (lfo) {
+                    // colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
+                    this.lineGraphics.beginFill(0, 0);
+                    this.lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
+                    this.lineGraphics.moveTo(this.positions[shape.component_session_uid].x, this.positions[shape.component_session_uid].y);
+                    this.lineGraphics.lineTo(this.positions[lfo].x, this.positions[lfo].y);
+                    this.lineGraphics.endFill();
+                }
+
+                if (flt) {
+                    // colour = AppData.COLORS[Session.GET(shape.component_session_uid).type_uid]
+                    this.lineGraphics.beginFill(0, 0);
+                    this.lineGraphics.lineStyle(1*AppData.RATIO, 0xffffff);
+                    this.lineGraphics.moveTo(this.positions[shape.component_session_uid].x, this.positions[shape.component_session_uid].y);
+                    this.lineGraphics.lineTo(this.positions[flt].x, this.positions[flt].y);
+                    this.lineGraphics.endFill();
+                }
+            }
+        }
+        return null;
+    }
+}

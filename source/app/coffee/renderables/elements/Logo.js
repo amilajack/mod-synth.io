@@ -1,4 +1,6 @@
-class Logo extends PIXI.Sprite
+class Logo extends PIXI.Sprite {
 
-    constructor: ->
-        super AppData.ASSETS.sprite.textures['logo.png']
+    constructor() {
+        super(AppData.ASSETS.sprite.textures['logo.png']);
+    }
+}

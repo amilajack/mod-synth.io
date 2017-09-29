@@ -1,161 +1,200 @@
-# import math.Vec2
-class DraggableElement
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import math.Vec2
+class DraggableElement {
 
-    constructor: (@element) ->
+    constructor(element) {
 
-        # settings
-        @VELOCITY_DAMPING = 0.9
-        @TWEEN_EASE = 0.07
-        @PRECISION = 0.1
+        // settings
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseMove = this.onMouseMove.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
+        this.onTouchStart = this.onTouchStart.bind(this);
+        this.onTouchMove = this.onTouchMove.bind(this);
+        this.onTouchEnd = this.onTouchEnd.bind(this);
+        this.onMouseWheel = this.onMouseWheel.bind(this);
+        this.element = element;
+        this.VELOCITY_DAMPING = 0.9;
+        this.TWEEN_EASE = 0.07;
+        this.PRECISION = 0.1;
 
-        # vectors
-        @position = new Vec2()
-        @velocity = new Vec2()
+        // vectors
+        this.position = new Vec2();
+        this.velocity = new Vec2();
 
-        @draggingOld = new Vec2()
-        @draggingCur = new Vec2()
-        @tweenTarget = new Vec2()
+        this.draggingOld = new Vec2();
+        this.draggingCur = new Vec2();
+        this.tweenTarget = new Vec2();
 
-        # more settings
-        @lock = false
-        @dragging = false
-        @moving = false
-        @onTween = false
-        @speed = 0
-        @currentTouches = 0
+        // more settings
+        this.lock = false;
+        this.dragging = false;
+        this.moving = false;
+        this.onTween = false;
+        this.speed = 0;
+        this.currentTouches = 0;
 
-        if Modernizr.touch
-            @element
-                .on 'touchstart', @onTouchStart
-                .on 'touchmove', @onTouchMove
-                .on 'touchend', @onTouchEnd
-                .on 'touchendoutside', @onTouchEnd
-        else
-            @element
-                .on 'mousedown', @onMouseDown
-                .on 'mousemove', @onMouseMove
-                .on 'mouseup', @onMouseUp
-                .on 'mouseupoutside', @onMouseUp
-        # window.addEventListener 'mousewheel', @onMouseWheel, false
+        if (Modernizr.touch) {
+            this.element
+                .on('touchstart', this.onTouchStart)
+                .on('touchmove', this.onTouchMove)
+                .on('touchend', this.onTouchEnd)
+                .on('touchendoutside', this.onTouchEnd);
+        } else {
+            this.element
+                .on('mousedown', this.onMouseDown)
+                .on('mousemove', this.onMouseMove)
+                .on('mouseup', this.onMouseUp)
+                .on('mouseupoutside', this.onMouseUp);
+        }
+    }
+        // window.addEventListener 'mousewheel', @onMouseWheel, false
 
-    onMouseDown: (e) =>
-        e.data.originalEvent.preventDefault()
-        @startDrag e.data.originalEvent.clientX, e.data.originalEvent.clientY
-        null
+    onMouseDown(e) {
+        e.data.originalEvent.preventDefault();
+        this.startDrag(e.data.originalEvent.clientX, e.data.originalEvent.clientY);
+        return null;
+    }
 
-    onMouseMove: (e) =>
-        e.data.originalEvent.preventDefault()
-        @moving = true
-        @updateDrag e.data.originalEvent.clientX, e.data.originalEvent.clientY
-        null
+    onMouseMove(e) {
+        e.data.originalEvent.preventDefault();
+        this.moving = true;
+        this.updateDrag(e.data.originalEvent.clientX, e.data.originalEvent.clientY);
+        return null;
+    }
 
-    onMouseUp: =>
-        @endDrag()
-        null
+    onMouseUp() {
+        this.endDrag();
+        return null;
+    }
 
-    onTouchStart: (e) =>
-        @currentTouches++
-        return if @currentTouches > 1
-        @identifier = e.data.identifier
+    onTouchStart(e) {
+        this.currentTouches++;
+        if (this.currentTouches > 1) { return; }
+        this.identifier = e.data.identifier;
 
-        e.data.originalEvent.preventDefault()
-        @startDrag e.data.global.x, e.data.global.y
-        null
+        e.data.originalEvent.preventDefault();
+        this.startDrag(e.data.global.x, e.data.global.y);
+        return null;
+    }
 
-    onTouchMove: (e) =>
-        return if @identifier isnt e.data.identifier
+    onTouchMove(e) {
+        if (this.identifier !== e.data.identifier) { return; }
 
-        e.data.originalEvent.preventDefault()
-        @updateDrag e.data.global.x, e.data.global.y
-        null
+        e.data.originalEvent.preventDefault();
+        this.updateDrag(e.data.global.x, e.data.global.y);
+        return null;
+    }
 
-    onTouchEnd: (e) =>
-        @currentTouches--
-        return if @identifier isnt e.data.identifier
+    onTouchEnd(e) {
+        this.currentTouches--;
+        if (this.identifier !== e.data.identifier) { return; }
 
-        @endDrag()
-        @identifier = null
-        null
+        this.endDrag();
+        this.identifier = null;
+        return null;
+    }
 
-    onMouseWheel: (event) =>
-        return if @lock is true
-        return if AppData.SHOW_MENU_PANNEL is true
+    onMouseWheel(event) {
+        if (this.lock === true) { return; }
+        if (AppData.SHOW_MENU_PANNEL === true) { return; }
 
-        @tweenPositionTo = null
-        @velocity.set event.wheelDeltaX * 0.2, event.wheelDeltaY * 0.2
-        null
+        this.tweenPositionTo = null;
+        this.velocity.set(event.wheelDeltaX * 0.2, event.wheelDeltaY * 0.2);
+        return null;
+    }
 
-    startDrag: (posX, posY) ->
-        return if @dragging
-        return if @lock
-        @dragging = true
-        @draggingCur.set posX, posY
-        @draggingOld.copy @draggingCur
-        null
+    startDrag(posX, posY) {
+        if (this.dragging) { return; }
+        if (this.lock) { return; }
+        this.dragging = true;
+        this.draggingCur.set(posX, posY);
+        this.draggingOld.copy(this.draggingCur);
+        return null;
+    }
 
-    updateDrag: (posX, posY) ->
-        return if not @dragging
-        return if @lock
-        @draggingCur.set posX, posY
-        x = @draggingCur.x-@draggingOld.x
-        y = @draggingCur.y-@draggingOld.y
-        @velocity.set x, y
-        @draggingOld.copy @draggingCur
-        null
+    updateDrag(posX, posY) {
+        if (!this.dragging) { return; }
+        if (this.lock) { return; }
+        this.draggingCur.set(posX, posY);
+        const x = this.draggingCur.x-this.draggingOld.x;
+        const y = this.draggingCur.y-this.draggingOld.y;
+        this.velocity.set(x, y);
+        this.draggingOld.copy(this.draggingCur);
+        return null;
+    }
 
-    endDrag: ->
-        return if not @dragging
-        @dragging = false
-        null
+    endDrag() {
+        if (!this.dragging) { return; }
+        this.dragging = false;
+        return null;
+    }
 
-    update: ->
+    update() {
 
-        # if there is a tween, interpolate value
-        if @onTween
-            @position.interpolateTo @tweenTarget, @TWEEN_EASE
-            if Math.abs( Vec2.subtract( @position, @tweenTarget ).length() ) < @PRECISION
-                @onTween = false
+        // if there is a tween, interpolate value
+        if (this.onTween) {
+            this.position.interpolateTo(this.tweenTarget, this.TWEEN_EASE);
+            if (Math.abs( Vec2.subtract( this.position, this.tweenTarget ).length() ) < this.PRECISION) {
+                this.onTween = false;
+            }
+        }
 
-        return if @lock
+        if (this.lock) { return; }
 
-        if @moving is true
-            @moving = false
-        if not @moving
-            @velocity.scale @VELOCITY_DAMPING
-        @speed = @velocity.length()
+        if (this.moving === true) {
+            this.moving = false;
+        }
+        if (!this.moving) {
+            this.velocity.scale(this.VELOCITY_DAMPING);
+        }
+        this.speed = this.velocity.length();
 
-        # round to precision
-        if Math.abs(@speed) < @PRECISION
-            @velocity.x = 0
-            @velocity.y = 0
+        // round to precision
+        if (Math.abs(this.speed) < this.PRECISION) {
+            this.velocity.x = 0;
+            this.velocity.y = 0;
+        }
 
-        @position.x += @velocity.x * AppData.RATIO
-        @position.y += @velocity.y * AppData.RATIO
-        null
+        this.position.x += this.velocity.x * AppData.RATIO;
+        this.position.y += this.velocity.y * AppData.RATIO;
+        return null;
+    }
 
-    resize: (viewportWidth, viewportHeight, globalWidth, globalHeight) ->
-        @vpw = viewportWidth
-        @vph = viewportHeight
-        @gw = globalWidth
-        @gh = globalHeight
-        null
+    resize(viewportWidth, viewportHeight, globalWidth, globalHeight) {
+        this.vpw = viewportWidth;
+        this.vph = viewportHeight;
+        this.gw = globalWidth;
+        this.gh = globalHeight;
+        return null;
+    }
 
-    constrainToBounds: ->
-        if @position.x < -(@gw - @vpw)
-            @position.x = -(@gw - @vpw)
-        if @position.x > 0
-            @position.x = 0
-        if @position.y < -(@gh - @vph)
-            @position.y = -(@gh - @vph)
-        if @position.y > 0
-            @position.y = 0
-        null
+    constrainToBounds() {
+        if (this.position.x < -(this.gw - this.vpw)) {
+            this.position.x = -(this.gw - this.vpw);
+        }
+        if (this.position.x > 0) {
+            this.position.x = 0;
+        }
+        if (this.position.y < -(this.gh - this.vph)) {
+            this.position.y = -(this.gh - this.vph);
+        }
+        if (this.position.y > 0) {
+            this.position.y = 0;
+        }
+        return null;
+    }
 
-    # sets the dragger to a specific x/y position
-    setPosition: (x, y) ->
-        temp = new Vec2 x, y
-        temp.invert()
+    // sets the dragger to a specific x/y position
+    setPosition(x, y) {
+        const temp = new Vec2(x, y);
+        temp.invert();
 
-        @onTween = true
-        @tweenTarget.copy temp
-        null
+        this.onTween = true;
+        this.tweenTarget.copy(temp);
+        return null;
+    }
+}

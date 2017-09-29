@@ -1,101 +1,131 @@
-class SubmenuButtonAdd extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class SubmenuButtonAdd extends PIXI.Container {
 
-    constructor: (label, texture, color) ->
-        super()
+    constructor(label, texture, color) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onHelp = this.onHelp.bind(this);
+        this.onDown = this.onDown.bind(this);
+        this.onUp = this.onUp.bind(this);
+        this.onOver = this.onOver.bind(this);
+        this.onOut = this.onOut.bind(this);
+        super();
 
-        App.HELP.add @onHelp
+        App.HELP.add(this.onHelp);
 
-        @duration = 0.3
-        @ease = Quad.easeInOut
-        @enabled = false
-        @scaleFactor = 0.45
+        this.duration = 0.3;
+        this.ease = Quad.easeInOut;
+        this.enabled = false;
+        this.scaleFactor = 0.45;
 
-        width = Math.round texture.width*@scaleFactor
-        height = Math.round texture.height*@scaleFactor
+        const width = Math.round(texture.width*this.scaleFactor);
+        const height = Math.round(texture.height*this.scaleFactor);
 
-        @img = new PIXI.Sprite texture
-        @img.anchor.x = 0.5
-        @img.anchor.y = 1
-        @img.scale.x = @img.scale.y = @scaleFactor
-        @img.position.x = AppData.SUBMENU_PANNEL/4
-        @img.position.y = AppData.SUBMENU_PANNEL/2 - AppData.PADDING
-        @img.tint = color
-        @addChild @img
+        this.img = new PIXI.Sprite(texture);
+        this.img.anchor.x = 0.5;
+        this.img.anchor.y = 1;
+        this.img.scale.x = (this.img.scale.y = this.scaleFactor);
+        this.img.position.x = AppData.SUBMENU_PANNEL/4;
+        this.img.position.y = (AppData.SUBMENU_PANNEL/2) - AppData.PADDING;
+        this.img.tint = color;
+        this.addChild(this.img);
 
-        @graphics = new PIXI.Graphics()
-        @graphics.beginFill 0x00ffff, 0
-        @graphics.drawRect 0, 0, AppData.SUBMENU_PANNEL/2, AppData.SUBMENU_PANNEL/2
-        @addChild @graphics
+        this.graphics = new PIXI.Graphics();
+        this.graphics.beginFill(0x00ffff, 0);
+        this.graphics.drawRect(0, 0, AppData.SUBMENU_PANNEL/2, AppData.SUBMENU_PANNEL/2);
+        this.addChild(this.graphics);
 
-        textFormat = Session.DUPLICATE_OBJECT AppData.TEXTFORMAT.MENU_SUBTITLE
-        textFormat.align = 'center'
+        const textFormat = Session.DUPLICATE_OBJECT(AppData.TEXTFORMAT.MENU_SUBTITLE);
+        textFormat.align = 'center';
         textFormat.wordWrap = true;
-        textFormat.wordWrapWidth = 300 * AppData.RATIO
+        textFormat.wordWrapWidth = 300 * AppData.RATIO;
 
-        @hint = new PIXI.Text label, textFormat
-        @hint.anchor.x = 0.5
-        @hint.anchor.y = 0
-        @hint.tint = 0x646464
-        @hint.scale.x = @hint.scale.y = 0.5
-        @hint.position.x = AppData.SUBMENU_PANNEL/4
-        @hint.position.y = AppData.SUBMENU_PANNEL/2 - AppData.PADDING/2
-        # @hint.visible = AppData.SHOW_LABELS
-        @addChild @hint
+        this.hint = new PIXI.Text(label, textFormat);
+        this.hint.anchor.x = 0.5;
+        this.hint.anchor.y = 0;
+        this.hint.tint = 0x646464;
+        this.hint.scale.x = (this.hint.scale.y = 0.5);
+        this.hint.position.x = AppData.SUBMENU_PANNEL/4;
+        this.hint.position.y = (AppData.SUBMENU_PANNEL/2) - (AppData.PADDING/2);
+        // @hint.visible = AppData.SHOW_LABELS
+        this.addChild(this.hint);
 
-        @hitArea = new PIXI.Rectangle(0, 0, AppData.SUBMENU_PANNEL/2, AppData.SUBMENU_PANNEL/2);
+        this.hitArea = new PIXI.Rectangle(0, 0, AppData.SUBMENU_PANNEL/2, AppData.SUBMENU_PANNEL/2);
 
-        @enable()
+        this.enable();
+    }
 
-    onHelp: (value) =>
-        # @hint.visible = value
-        null
+    onHelp(value) {
+        // @hint.visible = value
+        return null;
+    }
 
-    onDown: =>
-        @buttonClick()
-        null
+    onDown() {
+        this.buttonClick();
+        return null;
+    }
 
-    onUp: =>
-        @onOut()
-        null
+    onUp() {
+        this.onOut();
+        return null;
+    }
 
-    onOver: =>
-        return if not @enabled
-        TweenMax.to @hint, 0, { tint: 0xffffff, ease: @ease }
-        null
+    onOver() {
+        if (!this.enabled) { return; }
+        TweenMax.to(this.hint, 0, { tint: 0xffffff, ease: this.ease });
+        return null;
+    }
 
-    onOut: =>
-        return if not @enabled
-        TweenMax.to @hint, 0, { tint: 0x646464, ease: @ease }
-        null
+    onOut() {
+        if (!this.enabled) { return; }
+        TweenMax.to(this.hint, 0, { tint: 0x646464, ease: this.ease });
+        return null;
+    }
 
-    buttonClick: ->
-        # to be override
-        null
+    buttonClick() {
+        // to be override
+        return null;
+    }
 
-    enable: ->
-        @interactive = @buttonMode = @enabled = true
-        if Modernizr.touch
-            @on 'touchstart', @onDown
-            @on 'touchend', @onUp
-            @on 'touchendoutside', @onOut
-        else
-            @on 'mousedown', @onDown
-            @on 'mouseup', @onUp
-            @on 'mouseout', @onOut
-            @on 'mouseover', @onOver
-            @on 'mouseupoutside', @onOut
-        null
+    enable() {
+        this.interactive = (this.buttonMode = (this.enabled = true));
+        if (Modernizr.touch) {
+            this.on('touchstart', this.onDown);
+            this.on('touchend', this.onUp);
+            this.on('touchendoutside', this.onOut);
+        } else {
+            this.on('mousedown', this.onDown);
+            this.on('mouseup', this.onUp);
+            this.on('mouseout', this.onOut);
+            this.on('mouseover', this.onOver);
+            this.on('mouseupoutside', this.onOut);
+        }
+        return null;
+    }
 
-    disable: ->
-        @interactive = @buttonMode = @enabled = false
-        if Modernizr.touch
-            @off 'touchstart', @onDown
-            @off 'touchend', @onUp
-            @off 'touchendoutside', @onOut
-        else
-            @off 'mousedown', @onDown
-            @off 'mouseup', @onUp
-            @off 'mouseout', @onOut
-            @off 'mouseover', @onOver
-            @off 'mouseupoutside', @onOut
-        null
+    disable() {
+        this.interactive = (this.buttonMode = (this.enabled = false));
+        if (Modernizr.touch) {
+            this.off('touchstart', this.onDown);
+            this.off('touchend', this.onUp);
+            this.off('touchendoutside', this.onOut);
+        } else {
+            this.off('mousedown', this.onDown);
+            this.off('mouseup', this.onUp);
+            this.off('mouseout', this.onOut);
+            this.off('mouseover', this.onOver);
+            this.off('mouseupoutside', this.onOut);
+        }
+        return null;
+    }
+}

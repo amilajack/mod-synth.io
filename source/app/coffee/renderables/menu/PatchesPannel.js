@@ -1,179 +1,232 @@
-# import renderables.menu.Pannel
-class PatchesPannel extends Pannel
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS202: Simplify dynamic range loops
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.menu.Pannel
+class PatchesPannel extends Pannel {
 
-    constructor: (label) ->
-        super label
-
-        @elements = []
-
-        App.AUTH.add @checkUserAuth
-        App.PATCH_CHANGED.add @onPatchLoaded
-
-        @checkUserAuth()
-
-    clear: ->
-        for i in [0...@children.length-1]
-            @removeChild @children[1]
-        @elements = []
-        null
-
-    build: (data) =>
-        @clear()
-
-        isLoggedIn = Services.REFERENCE.auth().currentUser || false
-
-        @button_NEW = new SubmenuButton 'save to new patch', AppData.ASSETS.sprite.textures['ic-add-32.png']
-        @button_NEW.buttonClick = @createPatch
-        @button_NEW.y = AppData.MENU_PANNEL
-        @button_NEW.visible = isLoggedIn
-        @addChild @button_NEW
-
-        @description = new PIXI.Text 'You need to login in order to save or load patches.', AppData.TEXTFORMAT.MENU_DESCRIPTION
-        @description.scale.x = @description.scale.y = 0.5
-        @description.position.x = AppData.PADDING
-        @description.position.y = @button_NEW.y
-        @description.visible = !isLoggedIn
-        @addChild @description
-
-        @saved = new PIXI.Text 'AVAILABLE PATCHES', AppData.TEXTFORMAT.MENU_SUBTITLE
-        @saved.tint = 0x646464
-        @saved.scale.x = @saved.scale.y = 0.5
-        @saved.position.x = AppData.PADDING
-        @saved.position.y = @button_NEW.y + @button_NEW.height + AppData.PADDING
-        @addChild @saved
-
-        bt = new SubmenuButtonPatch Session.default.uid, new Date(parseInt(Session.default.date)).toLocaleDateString(), false
-        bt.setCurrent Session.default.uid is Session.patch.uid
-        @attachButtonClick bt, Session.default.uid
-        @addChild bt
-        @elements.push bt
-
-        if isLoggedIn
-            # data is null, check is current session is same as default
-            if data is null
-                if Session.patch.uid
-                    if Session.default.uid isnt Session.patch.uid
-                        @resetToDefault()
-                        @align()
-                        return
-            else
-                # sorting by creation date.
-                order = []
-                for component of data
-                    obj = data[component]
-                    obj.key = component
-                    order.push(obj);
-
-                order.sort (a,b) ->
-                    return a.date-b.date
-
-                for i in [0...order.length]
-                    bt = new SubmenuButtonPatch order[i].name, new Date(parseInt(order[i].date)).toLocaleDateString(), true
-                    bt.setCurrent Session.patch.uid is order[i].uid
-                    @attachButtonClick bt, order[i].key
-                    @addChild bt
-                    @elements.push bt
-
-        App.PATCH_CHANGED.dispatch()
-        @align()
-        null
-
-    align: ->
-        for i in [0...@elements.length]
-            if i is 0
-                @elements[i].y = @saved.y + @saved.height + AppData.PADDING/2
-            else
-                @elements[i].y = @elements[i-1].y + @elements[i-1].height
-        null
-
-    createPatch: =>
-        App.PROMPT.dispatch {
-            question: 'Choose a patch name:'
-            input: true
-            onConfirm: (data) =>
-
-                # to remove all components uncomment this
-                # and on Services.api.patches.save change to Session.patch.components = {}
-                # for component of Session.SETTINGS
-                #     App.REMOVE.dispatch Session.SETTINGS[component]
-
-                # saves new patch
-                Services.api.patches.save data, (snapshot) =>
-                    # stores cookie
-                    Cookies.setCookie 'patch', Session.patch.uid
-                    # saves new default preset
-                    Services.api.presets.save Session.patch.uid, 'default', 'default', (snapshot) =>
-                        Session.patch.preset = 'default'
-                        Session.patch.presets = snapshot.val()
-
-                        App.PATCH_CHANGED.dispatch()
-                        App.PRESET_CHANGED.dispatch()
-                        App.AUTO_SAVE.dispatch {}
-
-                        for id of Session.patch.presets
-                            Services.api.presets.update id
-                        @checkUserPatches()
-                        null
-                    null
-                null
+    constructor(label) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
         }
-        null
+        this.build = this.build.bind(this);
+        this.createPatch = this.createPatch.bind(this);
+        this.resetToDefault = this.resetToDefault.bind(this);
+        this.checkUserAuth = this.checkUserAuth.bind(this);
+        this.checkUserPatches = this.checkUserPatches.bind(this);
+        this.rebuildUserPatches = this.rebuildUserPatches.bind(this);
+        this.attachButtonClick = this.attachButtonClick.bind(this);
+        this.onPatchLoaded = this.onPatchLoaded.bind(this);
+        super(label);
 
-    resetToDefault: =>
-        App.LOAD_PATCH.dispatch {
+        this.elements = [];
+
+        App.AUTH.add(this.checkUserAuth);
+        App.PATCH_CHANGED.add(this.onPatchLoaded);
+
+        this.checkUserAuth();
+    }
+
+    clear() {
+        for (let i = 0, end = this.children.length-1, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            this.removeChild(this.children[1]);
+        }
+        this.elements = [];
+        return null;
+    }
+
+    build(data) {
+        this.clear();
+
+        const isLoggedIn = Services.REFERENCE.auth().currentUser || false;
+
+        this.button_NEW = new SubmenuButton('save to new patch', AppData.ASSETS.sprite.textures['ic-add-32.png']);
+        this.button_NEW.buttonClick = this.createPatch;
+        this.button_NEW.y = AppData.MENU_PANNEL;
+        this.button_NEW.visible = isLoggedIn;
+        this.addChild(this.button_NEW);
+
+        this.description = new PIXI.Text('You need to login in order to save or load patches.', AppData.TEXTFORMAT.MENU_DESCRIPTION);
+        this.description.scale.x = (this.description.scale.y = 0.5);
+        this.description.position.x = AppData.PADDING;
+        this.description.position.y = this.button_NEW.y;
+        this.description.visible = !isLoggedIn;
+        this.addChild(this.description);
+
+        this.saved = new PIXI.Text('AVAILABLE PATCHES', AppData.TEXTFORMAT.MENU_SUBTITLE);
+        this.saved.tint = 0x646464;
+        this.saved.scale.x = (this.saved.scale.y = 0.5);
+        this.saved.position.x = AppData.PADDING;
+        this.saved.position.y = this.button_NEW.y + this.button_NEW.height + AppData.PADDING;
+        this.addChild(this.saved);
+
+        let bt = new SubmenuButtonPatch(Session.default.uid, new Date(parseInt(Session.default.date)).toLocaleDateString(), false);
+        bt.setCurrent(Session.default.uid === Session.patch.uid);
+        this.attachButtonClick(bt, Session.default.uid);
+        this.addChild(bt);
+        this.elements.push(bt);
+
+        if (isLoggedIn) {
+            // data is null, check is current session is same as default
+            if (data === null) {
+                if (Session.patch.uid) {
+                    if (Session.default.uid !== Session.patch.uid) {
+                        this.resetToDefault();
+                        this.align();
+                        return;
+                    }
+                }
+            } else {
+                // sorting by creation date.
+                const order = [];
+                for (let component in data) {
+                    const obj = data[component];
+                    obj.key = component;
+                    order.push(obj);
+                }
+
+                order.sort((a,b) => a.date-b.date);
+
+                for (let i = 0, end = order.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+                    bt = new SubmenuButtonPatch(order[i].name, new Date(parseInt(order[i].date)).toLocaleDateString(), true);
+                    bt.setCurrent(Session.patch.uid === order[i].uid);
+                    this.attachButtonClick(bt, order[i].key);
+                    this.addChild(bt);
+                    this.elements.push(bt);
+                }
+            }
+        }
+
+        App.PATCH_CHANGED.dispatch();
+        this.align();
+        return null;
+    }
+
+    align() {
+        for (let i = 0, end = this.elements.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            if (i === 0) {
+                this.elements[i].y = this.saved.y + this.saved.height + (AppData.PADDING/2);
+            } else {
+                this.elements[i].y = this.elements[i-1].y + this.elements[i-1].height;
+            }
+        }
+        return null;
+    }
+
+    createPatch() {
+        App.PROMPT.dispatch({
+            question: 'Choose a patch name:',
+            input: true,
+            onConfirm: data => {
+
+                // to remove all components uncomment this
+                // and on Services.api.patches.save change to Session.patch.components = {}
+                // for component of Session.SETTINGS
+                //     App.REMOVE.dispatch Session.SETTINGS[component]
+
+                // saves new patch
+                Services.api.patches.save(data, snapshot => {
+                    // stores cookie
+                    Cookies.setCookie('patch', Session.patch.uid);
+                    // saves new default preset
+                    Services.api.presets.save(Session.patch.uid, 'default', 'default', snapshot => {
+                        Session.patch.preset = 'default';
+                        Session.patch.presets = snapshot.val();
+
+                        App.PATCH_CHANGED.dispatch();
+                        App.PRESET_CHANGED.dispatch();
+                        App.AUTO_SAVE.dispatch({});
+
+                        for (let id in Session.patch.presets) {
+                            Services.api.presets.update(id);
+                        }
+                        this.checkUserPatches();
+                        return null;
+                    });
+                    return null;
+                });
+                return null;
+            }
+        });
+        return null;
+    }
+
+    resetToDefault() {
+        App.LOAD_PATCH.dispatch({
             label: Session.default.uid,
             uid: Session.default.uid,
             confirm: false
+        });
+        return null;
+    }
+
+    checkUserAuth() {
+        if (Services.REFERENCE.auth().currentUser) {
+            this.checkUserPatches();
+        } else {
+            Session.patches = {};
+            this.build();
         }
-        null
+        return null;
+    }
 
-    checkUserAuth: =>
-        if Services.REFERENCE.auth().currentUser
-            @checkUserPatches()
-        else
-            Session.patches = {}
-            @build()
-        null
+    checkUserPatches() {
+        Services.api.patches.getAll(this.rebuildUserPatches);
+        return null;
+    }
 
-    checkUserPatches: =>
-        Services.api.patches.getAll @rebuildUserPatches
-        null
+    rebuildUserPatches(snapshot) {
+        Session.patches = snapshot.val() || {};
+        this.build(Session.patches);
+        return null;
+    }
 
-    rebuildUserPatches: (snapshot) =>
-        Session.patches = snapshot.val() || {}
-        @build Session.patches
-        null
-
-    attachButtonClick: (bt, uid) =>
-        bt.buttonClick = =>
-            return if uid is Session.patch.uid
-            App.LOAD_PATCH.dispatch {
-                uid: uid,
+    attachButtonClick(bt, uid) {
+        bt.buttonClick = () => {
+            if (uid === Session.patch.uid) { return; }
+            App.LOAD_PATCH.dispatch({
+                uid,
                 label: bt.label.text
-            }
-            @checkUserPatches()
-            null
+            });
+            this.checkUserPatches();
+            return null;
+        };
 
-        if bt.extraButton
-            # remove patch
-            bt.remove.buttonClick = =>
-                App.PROMPT.dispatch {
-                    question: 'Are you sure you want to delete "' + bt.label.text + '"?'
-                    onConfirm: =>
-                        Services.api.patches.remove uid, (snapshot) =>
-                            App.LOAD_PATCH.dispatch {
+        if (bt.extraButton) {
+            // remove patch
+            bt.remove.buttonClick = () => {
+                App.PROMPT.dispatch({
+                    question: `Are you sure you want to delete "${bt.label.text}"?`,
+                    onConfirm: () => {
+                        Services.api.patches.remove(uid, snapshot => {
+                            App.LOAD_PATCH.dispatch({
                                 uid: 'default',
                                 label: bt.label.text,
                                 confirm: false
-                            }
-                            @checkUserPatches()
-                        null
-                }
-                null
-        null
+                            });
+                            return this.checkUserPatches();
+                        });
+                        return null;
+                    }
+                });
+                return null;
+            };
+        }
+        return null;
+    }
 
-    onPatchLoaded: =>
-        for i in [0...@elements.length]
-            return if not Session.patch.name
-            @elements[i].setCurrent Session.patch.name.toUpperCase() is @elements[i].label.text
-        null
+    onPatchLoaded() {
+        for (let i = 0, end = this.elements.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            if (!Session.patch.name) { return; }
+            this.elements[i].setCurrent(Session.patch.name.toUpperCase() === this.elements[i].label.text);
+        }
+        return null;
+    }
+}

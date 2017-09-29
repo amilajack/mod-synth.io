@@ -1,284 +1,352 @@
-# import core.PixiBase
-# import renderables.layers.*
-# import renderables.Menu
-# import renderables.LoadingScreen
-# import controllers.Controllers
-# import audio.Instrument
-class App extends PixiBase
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS206: Consider reworking classes to avoid initClass
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import core.PixiBase
+// import renderables.layers.*
+// import renderables.Menu
+// import renderables.LoadingScreen
+// import controllers.Controllers
+// import audio.Instrument
+class App extends PixiBase {
+    static initClass() {
+    
+        // help
+        this.HELP = new signals.Signal();
+    
+        // prompt window
+        this.PROMPT = new signals.Signal();
+    
+        this.LOAD_PATCH = new signals.Signal();
+        this.LOAD_PRESET = new signals.Signal();
+        this.PATCH_CHANGED = new signals.Signal();
+        this.PRESET_CHANGED = new signals.Signal();
+    
+        // add/remove components
+        this.ADD = new signals.Signal();
+        this.REMOVE = new signals.Signal();
+    
+        this.TOGGLE_KEYBOARD = new signals.Signal();
+        this.TOGGLE_SETTINGS_PANNEL_HEIGHT = new signals.Signal();
+        this.TOGGLE_MENU = new signals.Signal();
+    
+        this.NOTE_ON = new signals.Signal();
+        this.NOTE_OFF = new signals.Signal();
+    
+        this.PATTERN_GATE = new signals.Signal();
+        this.SETTINGS_CHANGE = new signals.Signal();
+    
+        this.PICKER_SHOW = new signals.Signal();
+        this.PICKER_HIDE = new signals.Signal();
+        this.PICKER_VALUE = new signals.Signal();
+    
+        // used for menu
+        this.AUTH = new signals.Signal();
+        this.MIDI = new signals.Signal();
+    
+        this.AUTO_SAVE = new signals.Signal();
+    
+        this.prototype.onAutoSave = Session.debounce(function(data) {
+            if (AppData.TOUR_MODE === true) { return; }
+            if (Session.patch.uid === 'default') { return; }
+    
+            if (data.x) {
+                Session.SETTINGS[data.component_session_uid].x = data.x;
+            }
+            if (data.y) {
+                Session.SETTINGS[data.component_session_uid].y = data.y;
+            }
+            Services.api.patches.update();
+    
+            if (!Services.REFERENCE.auth().currentUser) { return; }
+            return Services.api.presets.update(Session.patch.preset);
+        }
+        , 500);
+    }
 
-    # help
-    @HELP: new signals.Signal()
+    constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.loadComplete = this.loadComplete.bind(this);
+        this.onResize = this.onResize.bind(this);
+        this.onToggleMenu = this.onToggleMenu.bind(this);
+        this.onPrompt = this.onPrompt.bind(this);
+        this.onLoadPatch = this.onLoadPatch.bind(this);
+        this.onLoadPreset = this.onLoadPreset.bind(this);
+        this.clearPatch = this.clearPatch.bind(this);
+        this.loadPatch = this.loadPatch.bind(this);
+        this.onToggle = this.onToggle.bind(this);
+        this.onHelp = this.onHelp.bind(this);
+        this.checkUserAuth = this.checkUserAuth.bind(this);
+        super();
 
-    # prompt window
-    @PROMPT: new signals.Signal()
+        this.loading = new LoadingScreen(this.loadComplete);
+        AppData.PIXI.stage.addChild(this.loading);
 
-    @LOAD_PATCH: new signals.Signal()
-    @LOAD_PRESET: new signals.Signal()
-    @PATCH_CHANGED: new signals.Signal()
-    @PRESET_CHANGED: new signals.Signal()
+        App.RESIZE.add(this.onResize);
+        App.TOGGLE_MENU.add(this.onToggleMenu);
+        App.PROMPT.add(this.onPrompt);
+        App.LOAD_PATCH.add(this.onLoadPatch);
+        App.LOAD_PRESET.add(this.onLoadPreset);
+        App.AUTO_SAVE.add(this.onAutoSave);
 
-    # add/remove components
-    @ADD: new signals.Signal()
-    @REMOVE: new signals.Signal()
+        App.AUTH.add(this.checkUserAuth);
 
-    @TOGGLE_KEYBOARD: new signals.Signal()
-    @TOGGLE_SETTINGS_PANNEL_HEIGHT: new signals.Signal()
-    @TOGGLE_MENU: new signals.Signal()
+        App.TOGGLE_KEYBOARD.add(this.onToggle);
+        App.HELP.add(this.onHelp);
+    }
 
-    @NOTE_ON: new signals.Signal()
-    @NOTE_OFF: new signals.Signal()
+    loadComplete() {
+        AppData.PIXI.stage.removeChild(this.loading);
 
-    @PATTERN_GATE: new signals.Signal()
-    @SETTINGS_CHANGE: new signals.Signal()
-
-    @PICKER_SHOW: new signals.Signal()
-    @PICKER_HIDE: new signals.Signal()
-    @PICKER_VALUE: new signals.Signal()
-
-    # used for menu
-    @AUTH: new signals.Signal()
-    @MIDI: new signals.Signal()
-
-    @AUTO_SAVE: new signals.Signal()
-
-    constructor: ->
-        super()
-
-        @loading = new LoadingScreen @loadComplete
-        AppData.PIXI.stage.addChild @loading
-
-        App.RESIZE.add @onResize
-        App.TOGGLE_MENU.add @onToggleMenu
-        App.PROMPT.add @onPrompt
-        App.LOAD_PATCH.add @onLoadPatch
-        App.LOAD_PRESET.add @onLoadPreset
-        App.AUTO_SAVE.add @onAutoSave
-
-        App.AUTH.add @checkUserAuth
-
-        App.TOGGLE_KEYBOARD.add @onToggle
-        App.HELP.add @onHelp
-
-    loadComplete: =>
-        AppData.PIXI.stage.removeChild @loading
-
-        # creates 2 pixi texts to force font rendering
-        t1 = new PIXI.Text 'mod-synth', AppData.TEXTFORMAT.TEST_FONT_1
+        // creates 2 pixi texts to force font rendering
+        const t1 = new PIXI.Text('mod-synth', AppData.TEXTFORMAT.TEST_FONT_1);
         t1.position.x = 0;
         t1.position.y = -100;
         AppData.PIXI.stage.addChild(t1);
 
-        t2 = new PIXI.Text 'mod-synth', AppData.TEXTFORMAT.TEST_FONT_2
+        const t2 = new PIXI.Text('mod-synth', AppData.TEXTFORMAT.TEST_FONT_2);
         t2.position.x = 400;
         t2.position.y = -100;
         AppData.PIXI.stage.addChild(t2);
 
-        @prompt = new Prompt()
-        @tour = new Tour()
+        this.prompt = new Prompt();
+        this.tour = new Tour();
 
-        # audio engine
-        @instrument = new Instrument()
+        // audio engine
+        this.instrument = new Instrument();
 
-        # all controls (keyboard, midi)
-        @controllers = new Controllers()
+        // all controls (keyboard, midi)
+        this.controllers = new Controllers();
 
-        # dashboard where all the components are (draggable)
-        @dashboard = new Dashboard()
-        @dashboard.alpha = 0
-        AppData.PIXI.stage.addChild @dashboard
+        // dashboard where all the components are (draggable)
+        this.dashboard = new Dashboard();
+        this.dashboard.alpha = 0;
+        AppData.PIXI.stage.addChild(this.dashboard);
 
-        # background of menus
-        @menuBg = new PIXI.Graphics()
-        AppData.PIXI.stage.addChild @menuBg
+        // background of menus
+        this.menuBg = new PIXI.Graphics();
+        AppData.PIXI.stage.addChild(this.menuBg);
 
-        # menu
-        @menu = new Menu()
-        AppData.PIXI.stage.addChild @menu
+        // menu
+        this.menu = new Menu();
+        AppData.PIXI.stage.addChild(this.menu);
 
-        # midi keyboard + settings
-        @bottom = new Bottom()
-        @bottom.alpha = 0
-        AppData.PIXI.stage.addChild @bottom
+        // midi keyboard + settings
+        this.bottom = new Bottom();
+        this.bottom.alpha = 0;
+        AppData.PIXI.stage.addChild(this.bottom);
 
-        # overlay of buttons
-        @controls = new Controls()
-        @controls.alpha = 0
-        AppData.PIXI.stage.addChild @controls
+        // overlay of buttons
+        this.controls = new Controls();
+        this.controls.alpha = 0;
+        AppData.PIXI.stage.addChild(this.controls);
 
-        if AppData.SHOW_TOUR
-            @tour.start()
-        else
-            patch = Cookies.getCookie('patch') || 'default'
-            @loadPatch patch
+        if (AppData.SHOW_TOUR) {
+            this.tour.start();
+        } else {
+            const patch = Cookies.getCookie('patch') || 'default';
+            this.loadPatch(patch);
+        }
 
-        if AppData.SHOW_MENU_PANNEL
-            @onToggleMenu { width: AppData.MENU_PANNEL + AppData.MENU_PANNEL_BORDER }, 0
+        if (AppData.SHOW_MENU_PANNEL) {
+            this.onToggleMenu({ width: AppData.MENU_PANNEL + AppData.MENU_PANNEL_BORDER }, 0);
+        }
 
-        # forces a resize
-        App.RESIZE.dispatch()
+        // forces a resize
+        App.RESIZE.dispatch();
 
-        TweenMax.to [@controls, @bottom, @dashboard], 0.5, { alpha: 1 }
-        null
+        TweenMax.to([this.controls, this.bottom, this.dashboard], 0.5, { alpha: 1 });
+        return null;
+    }
 
-    initialAdd: (delay, componentData) ->
-        setTimeout =>
-            data = Session.ADD componentData
-            App.ADD.dispatch data
-            App.SETTINGS_CHANGE.dispatch { component: data.component_session_uid }
-        , delay * 1000.0
-        null
+    initialAdd(delay, componentData) {
+        setTimeout(() => {
+            const data = Session.ADD(componentData);
+            App.ADD.dispatch(data);
+            return App.SETTINGS_CHANGE.dispatch({ component: data.component_session_uid });
+        }
+        , delay * 1000.0);
+        return null;
+    }
 
-    onResize: =>
-        return if not @menu
-        @menu.x = if AppData.SHOW_MENU_PANNEL is true then AppData.WIDTH-AppData.MENU_PANNEL-AppData.MENU_PANNEL_BORDER else AppData.WIDTH
-        @menu.resize()
+    onResize() {
+        if (!this.menu) { return; }
+        this.menu.x = AppData.SHOW_MENU_PANNEL === true ? AppData.WIDTH-AppData.MENU_PANNEL-AppData.MENU_PANNEL_BORDER : AppData.WIDTH;
+        this.menu.resize();
 
-        @menuBg.x = if AppData.SHOW_MENU_PANNEL is true then AppData.WIDTH+@dashboard.x else AppData.WIDTH
+        this.menuBg.x = AppData.SHOW_MENU_PANNEL === true ? AppData.WIDTH+this.dashboard.x : AppData.WIDTH;
 
-        @menuBg.beginFill AppData.BG
-        @menuBg.lineStyle 0, 0
-        @menuBg.moveTo 0, 0
-        @menuBg.lineTo AppData.SUBMENU_PANNEL, 0
-        @menuBg.lineTo AppData.SUBMENU_PANNEL, AppData.HEIGHT
-        @menuBg.lineTo 0, AppData.HEIGHT
-        @menuBg.lineTo 0, 0
-        @menuBg.endFill()
-        null
+        this.menuBg.beginFill(AppData.BG);
+        this.menuBg.lineStyle(0, 0);
+        this.menuBg.moveTo(0, 0);
+        this.menuBg.lineTo(AppData.SUBMENU_PANNEL, 0);
+        this.menuBg.lineTo(AppData.SUBMENU_PANNEL, AppData.HEIGHT);
+        this.menuBg.lineTo(0, AppData.HEIGHT);
+        this.menuBg.lineTo(0, 0);
+        this.menuBg.endFill();
+        return null;
+    }
 
-    onToggleMenu: (data, duration=0.3) =>
-        TweenMax.to [@dashboard, @bottom, @controls, @addLayer], duration, { x: (if AppData.SHOW_MENU_PANNEL is true then -data.width else 0), ease: Quad.easeInOut }
-        TweenMax.to @menu, duration, { x: (if AppData.SHOW_MENU_PANNEL is true then AppData.WIDTH-AppData.MENU_PANNEL-AppData.MENU_PANNEL_BORDER else AppData.WIDTH), ease: Quad.easeInOut }
-        TweenMax.to @menuBg, duration, { x: AppData.WIDTH-data.width, ease: Quad.easeInOut }
-        if AppData.SHOW_MENU_PANNEL is true
-            @menu.open data.width, duration
-            Analytics.event 'menu', 'open'
-        else
-            @menu.close duration
-            Analytics.event 'menu', 'close'
+    onToggleMenu(data, duration) {
+        if (duration == null) { duration = 0.3; }
+        TweenMax.to([this.dashboard, this.bottom, this.controls, this.addLayer], duration, { x: (AppData.SHOW_MENU_PANNEL === true ? -data.width : 0), ease: Quad.easeInOut });
+        TweenMax.to(this.menu, duration, { x: (AppData.SHOW_MENU_PANNEL === true ? AppData.WIDTH-AppData.MENU_PANNEL-AppData.MENU_PANNEL_BORDER : AppData.WIDTH), ease: Quad.easeInOut });
+        TweenMax.to(this.menuBg, duration, { x: AppData.WIDTH-data.width, ease: Quad.easeInOut });
+        if (AppData.SHOW_MENU_PANNEL === true) {
+            this.menu.open(data.width, duration);
+            Analytics.event('menu', 'open');
+        } else {
+            this.menu.close(duration);
+            Analytics.event('menu', 'close');
+        }
 
-        Cookies.setCookie 'menu', if AppData.SHOW_MENU_PANNEL is true then 'show' else 'hide'
-        null
+        Cookies.setCookie('menu', AppData.SHOW_MENU_PANNEL === true ? 'show' : 'hide');
+        return null;
+    }
 
-    onPrompt: (data) =>
-        if data
-            @prompt.show data
-            Analytics.event 'prompt', 'open'
-        else
-            @prompt.hide()
-            Analytics.event 'prompt', 'open'
-        null
+    onPrompt(data) {
+        if (data) {
+            this.prompt.show(data);
+            Analytics.event('prompt', 'open');
+        } else {
+            this.prompt.hide();
+            Analytics.event('prompt', 'open');
+        }
+        return null;
+    }
 
-    onLoadPatch: (data) =>
-        if data.confirm is undefined
-            data.confirm = true
+    onLoadPatch(data) {
+        if (data.confirm === undefined) {
+            data.confirm = true;
+        }
 
-        if data.confirm
-            # confirmation
-            App.PROMPT.dispatch {
-                question: 'Load "' + data.label + '" patch?'
-                onConfirm: =>
-                    # remove all components,
-                    @clearPatch =>
-                        @loadPatch data.uid
-                        null
-                    null
+        if (data.confirm) {
+            // confirmation
+            App.PROMPT.dispatch({
+                question: `Load "${data.label}" patch?`,
+                onConfirm: () => {
+                    // remove all components,
+                    this.clearPatch(() => {
+                        this.loadPatch(data.uid);
+                        return null;
+                    });
+                    return null;
+                }
+            });
+        } else {
+            // no confirmation
+            this.clearPatch(() => {
+                this.loadPatch(data.uid);
+                return null;
+            });
+        }
+        return null;
+    }
+
+    onLoadPreset(data) {
+
+        // changes selected preset
+        Session.patch.preset = data.uid;
+
+        // loops all components
+        const preset = Session.patch.presets[Session.patch.preset];
+        // loops through all components in preset
+        for (let component in preset.components) {
+            const settings = Session.DUPLICATE_OBJECT(Session.SETTINGS[component].settings);
+            if (settings) {
+                for (let p in preset.components[component]) {
+                    settings[p] = preset.components[component][p];
+                }
+                Session.SETTINGS[component].settings = settings;
+                App.SETTINGS_CHANGE.dispatch({ component });
             }
-        else
-            # no confirmation
-            @clearPatch =>
-                @loadPatch data.uid
-                null
-        null
+        }
 
-    onLoadPreset: (data) =>
+        // let app know all is updated
+        App.PRESET_CHANGED.dispatch();
+        return null;
+    }
 
-        # changes selected preset
-        Session.patch.preset = data.uid
+    clearPatch(callback) {
+        for (let component in Session.SETTINGS) {
+            App.REMOVE.dispatch(Session.SETTINGS[component]);
+        }
 
-        # loops all components
-        preset = Session.patch.presets[Session.patch.preset]
-        # loops through all components in preset
-        for component of preset.components
-            settings = Session.DUPLICATE_OBJECT Session.SETTINGS[component].settings
-            if settings
-                for p of preset.components[component]
-                    settings[p] = preset.components[component][p]
-                Session.SETTINGS[component].settings = settings
-                App.SETTINGS_CHANGE.dispatch { component: component }
+        setTimeout(function() {
+            callback();
+            return null;
+        }
+        , 1000);
+        return null;
+    }
 
-        # let app know all is updated
-        App.PRESET_CHANGED.dispatch()
-        null
+    loadPatch(patch_uid) {
+        // Loads PATCH and all PRESETS
+        Services.api.patches.load(patch_uid, snapshot => {
+            const data = snapshot.val();
 
-    clearPatch: (callback) =>
-        for component of Session.SETTINGS
-            App.REMOVE.dispatch Session.SETTINGS[component]
+            // if user tries to load inexistent patch
+            if (data === null) {
+                this.loadPatch('default');
+                return;
+            }
 
-        setTimeout ->
-            callback()
-            null
-        , 1000
-        null
+            Session.patch.uid = patch_uid;
+            Session.patch.author = data.author;
+            Session.patch.author_name = data.author_name;
+            Session.patch.components = data.components;
+            Session.patch.date = data.date;
+            Session.patch.name = data.name;
+            Session.patch.preset = data.preset;
 
-    loadPatch: (patch_uid) =>
-        # Loads PATCH and all PRESETS
-        Services.api.patches.load patch_uid, (snapshot) =>
-            data = snapshot.val()
+            // save cookie with latest patch
+            Cookies.setCookie('patch', patch_uid);
 
-            # if user tries to load inexistent patch
-            if data is null
-                @loadPatch 'default'
-                return
+            // loads all presets
+            Services.api.presets.loadAll(patch_uid, snapshot => {
+                Session.patch.presets = snapshot.val();
 
-            Session.patch.uid = patch_uid
-            Session.patch.author = data.author
-            Session.patch.author_name = data.author_name
-            Session.patch.components = data.components
-            Session.patch.date = data.date
-            Session.patch.name = data.name
-            Session.patch.preset = data.preset
+                App.PATCH_CHANGED.dispatch();
+                App.PRESET_CHANGED.dispatch();
 
-            # save cookie with latest patch
-            Cookies.setCookie 'patch', patch_uid
+                let i = 0;
+                for (let component in Session.patch.components) {
+                    this.initialAdd(0.123 * (i++), Session.patch.components[component]);
+                }
+                return null;
+            });
+            return null;
+        });
+        return null;
+    }
 
-            # loads all presets
-            Services.api.presets.loadAll patch_uid, (snapshot) =>
-                Session.patch.presets = snapshot.val()
+    onToggle(value) {
+        Cookies.setCookie('keyboard', value === true ? 'show' : 'hide');
+        return null;
+    }
 
-                App.PATCH_CHANGED.dispatch()
-                App.PRESET_CHANGED.dispatch()
+    onHelp(value) {
+        Cookies.setCookie('labels', value === true ? 'show' : 'hide');
+        return null;
+    }
 
-                i = 0
-                for component of Session.patch.components
-                    @initialAdd 0.123 * (i++), Session.patch.components[component]
-                null
-            null
-        null
-
-    onAutoSave: Session.debounce (data) ->
-        return if AppData.TOUR_MODE is true
-        return if Session.patch.uid is 'default'
-
-        if data.x
-            Session.SETTINGS[data.component_session_uid].x = data.x
-        if data.y
-            Session.SETTINGS[data.component_session_uid].y = data.y
-        Services.api.patches.update()
-
-        return if not Services.REFERENCE.auth().currentUser
-        Services.api.presets.update Session.patch.preset
-    , 500
-
-    onToggle: (value) =>
-        Cookies.setCookie 'keyboard', if value is true then 'show' else 'hide'
-        null
-
-    onHelp: (value) =>
-        Cookies.setCookie 'labels', if value is true then 'show' else 'hide'
-        null
-
-    checkUserAuth: =>
-        if not Services.REFERENCE.auth().currentUser
-            @clearPatch =>
-                @loadPatch 'default'
-        null
+    checkUserAuth() {
+        if (!Services.REFERENCE.auth().currentUser) {
+            this.clearPatch(() => {
+                return this.loadPatch('default');
+            });
+        }
+        return null;
+    }
+}
+App.initClass();

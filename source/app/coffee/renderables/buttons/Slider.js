@@ -1,78 +1,104 @@
-class Slider extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class Slider extends PIXI.Container {
 
-    constructor: ->
-        super()
+    constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onDown = this.onDown.bind(this);
+        this.onMove = this.onMove.bind(this);
+        this.onEnd = this.onEnd.bind(this);
+        super();
 
-        # components override this variables. they are needed for the PICKER object
-        @steps = 0
-        @snap = 0
-        @elements = []
+        // components override this variables. they are needed for the PICKER object
+        this.steps = 0;
+        this.snap = 0;
+        this.elements = [];
 
-        @lastValue = 0
-        @percentage = 0
+        this.lastValue = 0;
+        this.percentage = 0;
 
-        @dwnPosition = new Vec2()
-        @curPosition = new Vec2()
-        @isDragging = false
+        this.dwnPosition = new Vec2();
+        this.curPosition = new Vec2();
+        this.isDragging = false;
 
-        @graphics = new PIXI.Graphics()
-        @graphics.beginFill 0xffffff, 0
-        @graphics.drawRect 0, 0, AppData.ICON_SIZE_1, AppData.ICON_SIZE_1
-        @addChild @graphics
+        this.graphics = new PIXI.Graphics();
+        this.graphics.beginFill(0xffffff, 0);
+        this.graphics.drawRect(0, 0, AppData.ICON_SIZE_1, AppData.ICON_SIZE_1);
+        this.addChild(this.graphics);
 
-        @interactive = @buttonMode = true
-        if Modernizr.touch
-            @on 'touchstart', @onDown
-            @on 'touchmove', @onMove
-            @on 'touchend', @onEnd
-            @on 'touchendoutside', @onEnd
-        else
-            @on 'mousedown', @onDown
-            @on 'mousemove', @onMove
-            @on 'mouseup', @onEnd
-            @on 'mouseupoutside', @onEnd
+        this.interactive = (this.buttonMode = true);
+        if (Modernizr.touch) {
+            this.on('touchstart', this.onDown);
+            this.on('touchmove', this.onMove);
+            this.on('touchend', this.onEnd);
+            this.on('touchendoutside', this.onEnd);
+        } else {
+            this.on('mousedown', this.onDown);
+            this.on('mousemove', this.onMove);
+            this.on('mouseup', this.onEnd);
+            this.on('mouseupoutside', this.onEnd);
+        }
+    }
 
-    onDown: (e) =>
-        @lastValue = @percentage
-        @isDragging = true
+    onDown(e) {
+        this.lastValue = this.percentage;
+        this.isDragging = true;
 
-        @dwnPosition.set e.data.global.x, e.data.global.y
-        @defaultCursor = "-webkit-grabbing"
-        @identifier = e.data.identifier
+        this.dwnPosition.set(e.data.global.x, e.data.global.y);
+        this.defaultCursor = "-webkit-grabbing";
+        this.identifier = e.data.identifier;
 
-        App.PICKER_SHOW.dispatch { x: @x + AppData.ICON_SIZE_1/2, y: @y + AppData.ICON_SIZE_1/2, steps: @steps, snap: @snap, elements: @elements }
-        App.PICKER_VALUE.dispatch { percentage: @percentage }
-        null
+        App.PICKER_SHOW.dispatch({ x: this.x + (AppData.ICON_SIZE_1/2), y: this.y + (AppData.ICON_SIZE_1/2), steps: this.steps, snap: this.snap, elements: this.elements });
+        App.PICKER_VALUE.dispatch({ percentage: this.percentage });
+        return null;
+    }
 
-    onMove: (e) =>
-        return if e.data.identifier isnt @identifier
-        if @isDragging
-            @curPosition = new Vec2(e.data.global.x, e.data.global.y)
-            @curPosition.subtract @dwnPosition
-            @curPosition.scale 0.5
+    onMove(e) {
+        if (e.data.identifier !== this.identifier) { return; }
+        if (this.isDragging) {
+            this.curPosition = new Vec2(e.data.global.x, e.data.global.y);
+            this.curPosition.subtract(this.dwnPosition);
+            this.curPosition.scale(0.5);
 
-            @percentage = Math.round(@lastValue + @curPosition.x)
-            @constrain()
-            App.PICKER_VALUE.dispatch { percentage: @percentage }
-            @onUpdate()
-        null
+            this.percentage = Math.round(this.lastValue + this.curPosition.x);
+            this.constrain();
+            App.PICKER_VALUE.dispatch({ percentage: this.percentage });
+            this.onUpdate();
+        }
+        return null;
+    }
 
-    onEnd: (e) =>
-        return if e.data.identifier isnt @identifier
+    onEnd(e) {
+        if (e.data.identifier !== this.identifier) { return; }
 
-        @isDragging = false
+        this.isDragging = false;
 
-        @defaultCursor = "-webkit-grab"
-        @identifier = null
-        App.PICKER_HIDE.dispatch()
-        null
+        this.defaultCursor = "-webkit-grab";
+        this.identifier = null;
+        App.PICKER_HIDE.dispatch();
+        return null;
+    }
 
-    constrain: ->
-        if @percentage < 0
-            @percentage = 0
-        if @percentage > 100
-            @percentage = 100
-        return @percentage
+    constrain() {
+        if (this.percentage < 0) {
+            this.percentage = 0;
+        }
+        if (this.percentage > 100) {
+            this.percentage = 100;
+        }
+        return this.percentage;
+    }
 
-    onUpdate: ->
-        # to be overriden
+    onUpdate() {}
+}
+        // to be overriden

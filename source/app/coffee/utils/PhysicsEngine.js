@@ -1,199 +1,232 @@
-class PhysicsEngine
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS202: Simplify dynamic range loops
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class PhysicsEngine {
 
-    constructor: (@width, @height, @debug) ->
+    constructor(width, height, debug) {
 
-        @allowSleep         = true
-        @worldScale         = 60
-        @worldStep          = 1/20
-        @velocityIterations = 5
-        @positionIterations = 4
-        @gravity            = new Box2D.Common.Math.b2Vec2 0, 0
+        this.getBodyCB = this.getBodyCB.bind(this);
+        this.width = width;
+        this.height = height;
+        this.debug = debug;
+        this.allowSleep         = true;
+        this.worldScale         = 60;
+        this.worldStep          = 1/20;
+        this.velocityIterations = 5;
+        this.positionIterations = 4;
+        this.gravity            = new Box2D.Common.Math.b2Vec2(0, 0);
 
-        # virtual bounds
-        @boundsSize = { x: 0, y: 0, width: @width, height: @height }
+        // virtual bounds
+        this.boundsSize = { x: 0, y: 0, width: this.width, height: this.height };
 
-        @boundSize = 10
-        @boundPadding = 0
+        this.boundSize = 10;
+        this.boundPadding = 0;
 
-        @debugCanvas = document.createElement( 'canvas' )
+        this.debugCanvas = document.createElement( 'canvas' );
 
-        @bounds = []
+        this.bounds = [];
 
-        # dragging
-        @selectedBody = null
-        @mousePVec = null
-        @mouseJoint = null
+        // dragging
+        this.selectedBody = null;
+        this.mousePVec = null;
+        this.mouseJoint = null;
+    }
 
-    init: ->
-        @world = new Box2D.Dynamics.b2World @gravity, @allowSleep
-        if @debug
-            @world.SetDebugDraw @debugDraw()
+    init() {
+        this.world = new Box2D.Dynamics.b2World(this.gravity, this.allowSleep);
+        if (this.debug) {
+            this.world.SetDebugDraw(this.debugDraw());
+        }
 
-        @addBounds()
-        null
+        this.addBounds();
+        return null;
+    }
 
-    update: ->
-        @world.Step( @worldStep, @velocityIterations, @positionIterations)
-        @world.DrawDebugData()
-        @world.ClearForces()
-        null
+    update() {
+        this.world.Step( this.worldStep, this.velocityIterations, this.positionIterations);
+        this.world.DrawDebugData();
+        this.world.ClearForces();
+        return null;
+    }
 
-    down: (mouseX, mouseY) ->
-        body = @getBodyAtPosition( mouseX / @worldScale, mouseY / @worldScale )
-        if body
-            md = new Box2D.Dynamics.Joints.b2MouseJointDef()
-            md.bodyA = @world.GetGroundBody()
-            md.bodyB = body
-            md.target.Set( mouseX / @worldScale, mouseY / @worldScale )
-            md.collideConnected = true
-            md.maxForce = 1000.0 * body.GetMass()
-            @mouseJoint = @world.CreateJoint( md )
-            body.SetAwake( true )
-        return body
+    down(mouseX, mouseY) {
+        const body = this.getBodyAtPosition( mouseX / this.worldScale, mouseY / this.worldScale );
+        if (body) {
+            const md = new Box2D.Dynamics.Joints.b2MouseJointDef();
+            md.bodyA = this.world.GetGroundBody();
+            md.bodyB = body;
+            md.target.Set( mouseX / this.worldScale, mouseY / this.worldScale );
+            md.collideConnected = true;
+            md.maxForce = 1000.0 * body.GetMass();
+            this.mouseJoint = this.world.CreateJoint( md );
+            body.SetAwake( true );
+        }
+        return body;
+    }
 
-    move: (mouseX, mouseY) ->
-        if @mouseJoint
-            @mouseJoint.SetTarget(new Box2D.Common.Math.b2Vec2( mouseX / @worldScale, mouseY / @worldScale ))
-        null
+    move(mouseX, mouseY) {
+        if (this.mouseJoint) {
+            this.mouseJoint.SetTarget(new Box2D.Common.Math.b2Vec2( mouseX / this.worldScale, mouseY / this.worldScale ));
+        }
+        return null;
+    }
 
-    up: (mouseX, mouseY) ->
-        if @mouseJoint
-            @world.DestroyJoint( @mouseJoint )
-            @mouseJoint = null
-            @selectedBody = null
-        null
+    up(mouseX, mouseY) {
+        if (this.mouseJoint) {
+            this.world.DestroyJoint( this.mouseJoint );
+            this.mouseJoint = null;
+            this.selectedBody = null;
+        }
+        return null;
+    }
 
-    getBodyAtPosition: (x, y) ->
-        @mousePVec = new Box2D.Common.Math.b2Vec2( x, y )
-        aabb = new Box2D.Collision.b2AABB()
-        aabb.lowerBound.Set( x - 0.001, y - 0.001 )
-        aabb.upperBound.Set( x + 0.001, y + 0.001 )
-        @world.QueryAABB( @getBodyCB, aabb )
+    getBodyAtPosition(x, y) {
+        this.mousePVec = new Box2D.Common.Math.b2Vec2( x, y );
+        const aabb = new Box2D.Collision.b2AABB();
+        aabb.lowerBound.Set( x - 0.001, y - 0.001 );
+        aabb.upperBound.Set( x + 0.001, y + 0.001 );
+        this.world.QueryAABB( this.getBodyCB, aabb );
 
-        return @selectedBody
+        return this.selectedBody;
+    }
 
-    getBodyCB: (fixture) =>
-        if fixture.GetBody().GetType() isnt Box2D.Dynamics.b2Body.b2_staticBody
-            if fixture.GetShape().TestPoint( fixture.GetBody().GetTransform(), @mousePVec )
-                @selectedBody = fixture.GetBody()
-                return false
-        return true
+    getBodyCB(fixture) {
+        if (fixture.GetBody().GetType() !== Box2D.Dynamics.b2Body.b2_staticBody) {
+            if (fixture.GetShape().TestPoint( fixture.GetBody().GetTransform(), this.mousePVec )) {
+                this.selectedBody = fixture.GetBody();
+                return false;
+            }
+        }
+        return true;
+    }
 
-    createBox: (x, y, width, height, type) ->
-        polygonShape = new Box2D.Collision.Shapes.b2PolygonShape()
-        polygonShape.SetAsBox( width / 2 / @worldScale, height / 2 / @worldScale )
+    createBox(x, y, width, height, type) {
+        const polygonShape = new Box2D.Collision.Shapes.b2PolygonShape();
+        polygonShape.SetAsBox( width / 2 / this.worldScale, height / 2 / this.worldScale );
 
-        fixtureDef = new Box2D.Dynamics.b2FixtureDef()
-        fixtureDef.density = 1.0
-        fixtureDef.friction = 0.5
-        fixtureDef.restitution = 0.5
-        fixtureDef.shape = polygonShape
+        const fixtureDef = new Box2D.Dynamics.b2FixtureDef();
+        fixtureDef.density = 1.0;
+        fixtureDef.friction = 0.5;
+        fixtureDef.restitution = 0.5;
+        fixtureDef.shape = polygonShape;
 
-        bodyDef = new Box2D.Dynamics.b2BodyDef()
-        bodyDef.type = type
-        # bodyDef.linearDamping = 4
-        # bodyDef.angularDamping = 4
-        # bodyDef.fixedRotation = true
-        bodyDef.position.Set( x / @worldScale, y / @worldScale )
+        const bodyDef = new Box2D.Dynamics.b2BodyDef();
+        bodyDef.type = type;
+        // bodyDef.linearDamping = 4
+        // bodyDef.angularDamping = 4
+        // bodyDef.fixedRotation = true
+        bodyDef.position.Set( x / this.worldScale, y / this.worldScale );
 
-        body = @world.CreateBody( bodyDef )
-        body.CreateFixture( fixtureDef )
-        return body
+        const body = this.world.CreateBody( bodyDef );
+        body.CreateFixture( fixtureDef );
+        return body;
+    }
 
-    createCircle: ( radius, x, y, type ) ->
-        polygonShape = new Box2D.Collision.Shapes.b2CircleShape( radius / @worldScale )
+    createCircle( radius, x, y, type ) {
+        const polygonShape = new Box2D.Collision.Shapes.b2CircleShape( radius / this.worldScale );
 
-        fixtureDef = new Box2D.Dynamics.b2FixtureDef()
-        fixtureDef.density = 1.0
-        fixtureDef.friction = 0.5
-        fixtureDef.restitution = 0.1
-        fixtureDef.shape = polygonShape
+        const fixtureDef = new Box2D.Dynamics.b2FixtureDef();
+        fixtureDef.density = 1.0;
+        fixtureDef.friction = 0.5;
+        fixtureDef.restitution = 0.1;
+        fixtureDef.shape = polygonShape;
 
-        bodyDef = new Box2D.Dynamics.b2BodyDef()
-        bodyDef.type = type
-        # bodyDef.linearDamping = 2
-        # bodyDef.angularDamping = 2
-        # bodyDef.fixedRotation = true
-        bodyDef.position.Set( x / @worldScale, y / @worldScale )
+        const bodyDef = new Box2D.Dynamics.b2BodyDef();
+        bodyDef.type = type;
+        // bodyDef.linearDamping = 2
+        // bodyDef.angularDamping = 2
+        // bodyDef.fixedRotation = true
+        bodyDef.position.Set( x / this.worldScale, y / this.worldScale );
 
-        body = @world.CreateBody( bodyDef )
-        body.CreateFixture( fixtureDef )
-        return body
+        const body = this.world.CreateBody( bodyDef );
+        body.CreateFixture( fixtureDef );
+        return body;
+    }
 
-    createCustom: ( vertices, x, y, type ) ->
-        polygonShape = new Box2D.Collision.Shapes.b2PolygonShape()
+    createCustom( vertices, x, y, type ) {
+        const polygonShape = new Box2D.Collision.Shapes.b2PolygonShape();
 
-        fixtureDef = new Box2D.Dynamics.b2FixtureDef()
-        fixtureDef.density = 1.0
-        fixtureDef.friction = 0.5
-        fixtureDef.restitution = 0.1
-        fixtureDef.shape = polygonShape
-        fixtureDef.shape.SetAsArray( vertices )
+        const fixtureDef = new Box2D.Dynamics.b2FixtureDef();
+        fixtureDef.density = 1.0;
+        fixtureDef.friction = 0.5;
+        fixtureDef.restitution = 0.1;
+        fixtureDef.shape = polygonShape;
+        fixtureDef.shape.SetAsArray( vertices );
 
-        bodyDef = new Box2D.Dynamics.b2BodyDef()
-        bodyDef.type = type
-        bodyDef.linearDamping = 1.5
-        bodyDef.angularDamping = 1.5
-        bodyDef.fixedRotation = true
-        bodyDef.position.Set( x / @worldScale, y / @worldScale )
+        const bodyDef = new Box2D.Dynamics.b2BodyDef();
+        bodyDef.type = type;
+        bodyDef.linearDamping = 1.5;
+        bodyDef.angularDamping = 1.5;
+        bodyDef.fixedRotation = true;
+        bodyDef.position.Set( x / this.worldScale, y / this.worldScale );
 
-        body = @world.CreateBody( bodyDef )
-        body.CreateFixture( fixtureDef )
-        return body
+        const body = this.world.CreateBody( bodyDef );
+        body.CreateFixture( fixtureDef );
+        return body;
+    }
 
-    addBounds: ->
-        @bounds.push( @createBox(
-            @boundsSize.x + @boundsSize.width / 2,
-            @boundsSize.y + @boundPadding + @boundSize / 2 + 0,
-            @boundsSize.width + @boundSize * 2,
-            @boundSize,
-            Box2D.Dynamics.b2Body.b2_staticBody ) )
+    addBounds() {
+        this.bounds.push( this.createBox(
+            this.boundsSize.x + (this.boundsSize.width / 2),
+            this.boundsSize.y + this.boundPadding + (this.boundSize / 2) + 0,
+            this.boundsSize.width + (this.boundSize * 2),
+            this.boundSize,
+            Box2D.Dynamics.b2Body.b2_staticBody ) );
 
-        @bounds.push( @createBox(
-            @boundsSize.x - @boundPadding - @boundSize / 2 + @boundsSize.width,
-            @boundsSize.y + @boundsSize.height / 2,
-            @boundSize,
-            @boundsSize.height + @boundSize * 2,
-            Box2D.Dynamics.b2Body.b2_staticBody ) )
+        this.bounds.push( this.createBox(
+            (this.boundsSize.x - this.boundPadding - (this.boundSize / 2)) + this.boundsSize.width,
+            this.boundsSize.y + (this.boundsSize.height / 2),
+            this.boundSize,
+            this.boundsSize.height + (this.boundSize * 2),
+            Box2D.Dynamics.b2Body.b2_staticBody ) );
 
-        @bounds.push( @createBox(
-            @boundsSize.x + @boundsSize.width / 2,
-            @boundsSize.y - @boundPadding - @boundSize / 2 + @boundsSize.height,
-            @boundsSize.width + @boundSize * 2,
-            @boundSize,
-            Box2D.Dynamics.b2Body.b2_staticBody ) )
+        this.bounds.push( this.createBox(
+            this.boundsSize.x + (this.boundsSize.width / 2),
+            (this.boundsSize.y - this.boundPadding - (this.boundSize / 2)) + this.boundsSize.height,
+            this.boundsSize.width + (this.boundSize * 2),
+            this.boundSize,
+            Box2D.Dynamics.b2Body.b2_staticBody ) );
 
-        @bounds.push( @createBox(
-            @boundsSize.x + @boundPadding + @boundSize / 2 + 0,
-            @boundsSize.y + @boundsSize.height / 2,
-            @boundSize,
-            @boundsSize.height + @boundSize * 2,
-            Box2D.Dynamics.b2Body.b2_staticBody ) )
-        null
+        this.bounds.push( this.createBox(
+            this.boundsSize.x + this.boundPadding + (this.boundSize / 2) + 0,
+            this.boundsSize.y + (this.boundsSize.height / 2),
+            this.boundSize,
+            this.boundsSize.height + (this.boundSize * 2),
+            Box2D.Dynamics.b2Body.b2_staticBody ) );
+        return null;
+    }
 
-    removeBounds: ->
-        for i in [0...@bounds.length]
-            @world.DestroyBody @bounds[i]
-        @bounds = []
-        null
+    removeBounds() {
+        for (let i = 0, end = this.bounds.length, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            this.world.DestroyBody(this.bounds[i]);
+        }
+        this.bounds = [];
+        return null;
+    }
 
-    destroy: (body) ->
-        @world.DestroyBody body
-        null
+    destroy(body) {
+        this.world.DestroyBody(body);
+        return null;
+    }
 
-    debugDraw: ->
-        @debugCanvas.style.position = 'absolute'
-        @debugCanvas.style.top = 0
-        @debugCanvas.style.left = 0
-        @debugCanvas.style.pointerEvents = 'none'
-        @debugCanvas.width = @width
-        @debugCanvas.height = @height
-        document.body.appendChild( @debugCanvas )
+    debugDraw() {
+        this.debugCanvas.style.position = 'absolute';
+        this.debugCanvas.style.top = 0;
+        this.debugCanvas.style.left = 0;
+        this.debugCanvas.style.pointerEvents = 'none';
+        this.debugCanvas.width = this.width;
+        this.debugCanvas.height = this.height;
+        document.body.appendChild( this.debugCanvas );
 
-        debugDraw = new Box2D.Dynamics.b2DebugDraw()
-        debugDraw.SetSprite( @debugCanvas.getContext( '2d' ) )
-        debugDraw.SetDrawScale( @worldScale )
-        debugDraw.SetFillAlpha( 0.5 )
-        debugDraw.SetLineThickness( 1.0 )
-        debugDraw.SetFlags( Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_jointBit )
-        return debugDraw
+        const debugDraw = new Box2D.Dynamics.b2DebugDraw();
+        debugDraw.SetSprite( this.debugCanvas.getContext( '2d' ) );
+        debugDraw.SetDrawScale( this.worldScale );
+        debugDraw.SetFillAlpha( 0.5 );
+        debugDraw.SetLineThickness( 1.0 );
+        debugDraw.SetFlags( Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_jointBit );
+        return debugDraw;
+    }
+}

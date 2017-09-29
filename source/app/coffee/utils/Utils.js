@@ -1,37 +1,50 @@
-class Utils
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class Utils {
 
-    # loads json file
-    @loadJSON: (url) ->
-        return new Promise (resolve, reject) ->
-            xhr = new XMLHttpRequest()
-            xhr.open 'get', url, true
-            xhr.responseType = 'json'
-            xhr.onload = ->
-                status = xhr.status
-                if status is 200
-                    resolve xhr.response
-                else
-                    reject status
-                null
-            xhr.onerror = ->
-                reject Error('Network Error')
-                null
-            xhr.send()
-            null
+    // loads json file
+    static loadJSON(url) {
+        return new Promise(function(resolve, reject) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('get', url, true);
+            xhr.responseType = 'json';
+            xhr.onload = function() {
+                const { status } = xhr;
+                if (status === 200) {
+                    resolve(xhr.response);
+                } else {
+                    reject(status);
+                }
+                return null;
+            };
+            xhr.onerror = function() {
+                reject(Error('Network Error'));
+                return null;
+            };
+            xhr.send();
+            return null;
+        });
+    }
 
-    # gets query string params
-    @getQueryParam: (name) ->
-        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]")
-        regex = new RegExp "[\\?&]" + name + "=([^&#]*)"
-        results = regex.exec location.search.toLowerCase()
-        return if results is null then false else decodeURIComponent results[1].replace(/\+/g, " ")
+    // gets query string params
+    static getQueryParam(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        const regex = new RegExp(`[\\?&]${name}=([^&#]*)`);
+        const results = regex.exec(location.search.toLowerCase());
+        if (results === null) { return false; } else { return decodeURIComponent(results[1].replace(/\+/g, " ")); }
+    }
 
-    # confirm window with callback
-    @confirm: (action, onConfirm) ->
-        # bypassing warning
-        onConfirm()
+    // confirm window with callback
+    static confirm(action, onConfirm) {
+        // bypassing warning
+        onConfirm();
 
-        # w = confirm action
-        # if w
-        #     onConfirm()
-        null
+        // w = confirm action
+        // if w
+        //     onConfirm()
+        return null;
+    }
+}

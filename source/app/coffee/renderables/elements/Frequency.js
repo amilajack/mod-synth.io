@@ -1,60 +1,85 @@
-# import renderables.buttons.Slider
-class Frequency extends Slider
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.buttons.Slider
+class Frequency extends Slider {
 
-    constructor: (@component_session_uid) ->
-        super()
+    constructor(component_session_uid) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onEnd = this.onEnd.bind(this);
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        this.component_session_uid = component_session_uid;
+        super();
 
-        App.SETTINGS_CHANGE.add @onSettingsChange
+        App.SETTINGS_CHANGE.add(this.onSettingsChange);
 
-        @range = {
+        this.range = {
             min: 0,
             max: 20
+        };
+
+        this.percentage = MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.frequency, this.range.min, this.range.max, 0, 100, true);
+
+        this.title = new PIXI.Text('FREQ.', AppData.TEXTFORMAT.SETTINGS_LABEL);
+        this.title.scale.x = (this.title.scale.y = 0.5);
+        this.title.anchor.x = 0.5;
+        this.title.x = AppData.ICON_SIZE_1 / 2;
+        this.title.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+        this.title.tint = 0x646464;
+        this.addChild(this.title);
+
+        this.value = new PIXI.Text('', AppData.TEXTFORMAT.SETTINGS_NUMBER);
+        this.value.scale.x = (this.value.scale.y = 0.5);
+        this.value.anchor.x = 0.5;
+        this.value.anchor.y = 1;
+        this.value.x = AppData.ICON_SIZE_1 / 2;
+        this.value.y = AppData.ICON_SIZE_1 + (6 * AppData.RATIO);
+        this.addChild(this.value);
+
+        this.unit = new PIXI.Text('Hz', AppData.TEXTFORMAT.SETTINGS_NUMBER_POSTSCRIPT);
+        this.unit.scale.x = (this.unit.scale.y = 0.5);
+        this.unit.y = 17 * AppData.RATIO;
+        this.unit.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+        this.addChild(this.unit);
+    }
+
+    onEnd(e) {
+        super.onEnd(e);
+        if (this.lastValue === this.percentage) {
+            const value = 100/(this.range.max-this.range.min);
+            this.percentage += value;
+            if (this.percentage >= (value*(this.range.max-this.range.min))) {
+                this.percentage = 0;
+            }
+            this.onUpdate();
         }
+        return null;
+    }
 
-        @percentage = MathUtils.map(Session.SETTINGS[@component_session_uid].settings.frequency, @range.min, @range.max, 0, 100, true)
+    onSettingsChange(event) {
+        if (event.component === this.component_session_uid) {
+            let v = Session.SETTINGS[this.component_session_uid].settings.frequency;
+            if (v >= 1000) {
+                v = (Session.SETTINGS[this.component_session_uid].settings.frequency / 1000).toFixed(1) + 'k';
+            }
+            this.value.text = v;
+            this.unit.x = this.value.x + (this.value.width / 2);
+        }
+        return null;
+    }
 
-        @title = new PIXI.Text 'FREQ.', AppData.TEXTFORMAT.SETTINGS_LABEL
-        @title.scale.x = @title.scale.y = 0.5
-        @title.anchor.x = 0.5
-        @title.x = AppData.ICON_SIZE_1 / 2
-        @title.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
-        @title.tint = 0x646464
-        @addChild @title
-
-        @value = new PIXI.Text '', AppData.TEXTFORMAT.SETTINGS_NUMBER
-        @value.scale.x = @value.scale.y = 0.5
-        @value.anchor.x = 0.5
-        @value.anchor.y = 1
-        @value.x = AppData.ICON_SIZE_1 / 2
-        @value.y = AppData.ICON_SIZE_1 + 6 * AppData.RATIO
-        @addChild @value
-
-        @unit = new PIXI.Text 'Hz', AppData.TEXTFORMAT.SETTINGS_NUMBER_POSTSCRIPT
-        @unit.scale.x = @unit.scale.y = 0.5
-        @unit.y = 17 * AppData.RATIO
-        @unit.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
-        @addChild @unit
-
-    onEnd: (e) =>
-        super e
-        if @lastValue is @percentage
-            value = 100/(@range.max-@range.min)
-            @percentage += value
-            if @percentage >= value*(@range.max-@range.min)
-                @percentage = 0
-            @onUpdate()
-        null
-
-    onSettingsChange: (event) =>
-        if event.component is @component_session_uid
-            v = Session.SETTINGS[@component_session_uid].settings.frequency
-            if v >= 1000
-                v = (Session.SETTINGS[@component_session_uid].settings.frequency / 1000).toFixed(1) + 'k'
-            @value.text = v
-            @unit.x = @value.x + @value.width / 2
-        null
-
-    onUpdate: ->
-        Session.SETTINGS[@component_session_uid].settings.frequency = MathUtils.map(@percentage, 0, 100, @range.min, @range.max, true)
-        App.SETTINGS_CHANGE.dispatch { component: @component_session_uid }
-        null
+    onUpdate() {
+        Session.SETTINGS[this.component_session_uid].settings.frequency = MathUtils.map(this.percentage, 0, 100, this.range.min, this.range.max, true);
+        App.SETTINGS_CHANGE.dispatch({ component: this.component_session_uid });
+        return null;
+    }
+}

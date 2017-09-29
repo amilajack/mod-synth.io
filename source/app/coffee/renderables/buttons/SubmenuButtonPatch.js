@@ -1,130 +1,165 @@
-class SubmenuButtonPatch extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class SubmenuButtonPatch extends PIXI.Container {
 
-    constructor: (label, date, @extraButton = false) ->
-        super()
+    constructor(label, date, extraButton) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onDown = this.onDown.bind(this);
+        this.onUp = this.onUp.bind(this);
+        this.onOver = this.onOver.bind(this);
+        this.onOut = this.onOut.bind(this);
+        if (extraButton == null) { extraButton = false; }
+        this.extraButton = extraButton;
+        super();
 
-        @data = {
-            label: label,
-            date: date
+        this.data = {
+            label,
+            date
+        };
+
+        const limit = AppData.ICON_SIZE_1 * 2;
+        const iconSize = 8 * AppData.RATIO;
+
+        this.graphics = new PIXI.Graphics();
+        this.graphics.beginFill(0x00ffff, 0);
+        this.graphics.drawRect(0, 0, AppData.SUBMENU_PANNEL-limit, AppData.ICON_SIZE_1);
+        this.addChild(this.graphics);
+
+        this.duration = 0.3;
+        this.ease = Quad.easeInOut;
+        this.enabled = false;
+        this.selected = false;
+        this.overAlpha = 1.0;
+        this.outAlpha = 0.65;
+
+        this.label = new PIXI.Text(label.toUpperCase(), AppData.TEXTFORMAT.MENU);
+        this.label.anchor.y = 1;
+        this.label.scale.x = (this.label.scale.y = 0.5);
+        this.label.position.x = AppData.PADDING;
+        this.label.position.y = AppData.ICON_SIZE_1 / 2;
+        this.addChild(this.label);
+
+        this.date = new PIXI.Text(date, AppData.TEXTFORMAT.MENU);
+        this.date.tint = 0x646464;
+        this.date.anchor.y = 0;
+        this.date.scale.x = (this.date.scale.y = 0.5);
+        this.date.position.x = AppData.PADDING * 2;
+        this.date.position.y = AppData.ICON_SIZE_1 / 2;
+        this.addChild(this.date);
+
+        this.img = new PIXI.Sprite(AppData.ASSETS.sprite.textures['ic-selection-active.png']);
+        this.img.tint = 0xff0000;
+        this.img.anchor.x = 0;
+        this.img.anchor.y = 0.5;
+        this.img.scale.x = (this.img.scale.y = 0.5);
+        this.img.x = AppData.PADDING;
+        this.img.y = (AppData.ICON_SIZE_1 / 2) + iconSize;
+        this.addChild(this.img);
+
+        if (this.extraButton) {
+            this.remove = new ICButton(AppData.ASSETS.sprite.textures['ic-remove-32.png'], '');
+            this.remove.x = AppData.SUBMENU_PANNEL - (limit/2) - (10*AppData.RATIO);
+            this.remove.y = 0;
+            this.addChild(this.remove);
         }
 
-        limit = AppData.ICON_SIZE_1 * 2
-        iconSize = 8 * AppData.RATIO
+        this.hitArea = new PIXI.Rectangle(0, 0, AppData.SUBMENU_PANNEL-limit, AppData.ICON_SIZE_1);
 
-        @graphics = new PIXI.Graphics()
-        @graphics.beginFill 0x00ffff, 0
-        @graphics.drawRect 0, 0, AppData.SUBMENU_PANNEL-limit, AppData.ICON_SIZE_1
-        @addChild @graphics
+        this.alpha = this.outAlpha;
+        this.enable();
+    }
 
-        @duration = 0.3
-        @ease = Quad.easeInOut
-        @enabled = false
-        @selected = false
-        @overAlpha = 1.0
-        @outAlpha = 0.65
+    onDown() {
+        this.buttonClick();
+        return null;
+    }
 
-        @label = new PIXI.Text label.toUpperCase(), AppData.TEXTFORMAT.MENU
-        @label.anchor.y = 1
-        @label.scale.x = @label.scale.y = 0.5
-        @label.position.x = AppData.PADDING
-        @label.position.y = AppData.ICON_SIZE_1 / 2
-        @addChild @label
+    onUp() {
+        this.onOut();
+        return null;
+    }
 
-        @date = new PIXI.Text date, AppData.TEXTFORMAT.MENU
-        @date.tint = 0x646464
-        @date.anchor.y = 0
-        @date.scale.x = @date.scale.y = 0.5
-        @date.position.x = AppData.PADDING * 2
-        @date.position.y = AppData.ICON_SIZE_1 / 2
-        @addChild @date
+    onOver() {
+        if (!this.enabled) { return; }
+        if (this.selected) { return; }
+        TweenMax.to(this, 0, { alpha: this.overAlpha, ease: this.ease });
+        return null;
+    }
 
-        @img = new PIXI.Sprite AppData.ASSETS.sprite.textures['ic-selection-active.png']
-        @img.tint = 0xff0000
-        @img.anchor.x = 0
-        @img.anchor.y = 0.5
-        @img.scale.x = @img.scale.y = 0.5
-        @img.x = AppData.PADDING
-        @img.y = AppData.ICON_SIZE_1 / 2 + iconSize
-        @addChild @img
+    onOut() {
+        if (!this.enabled) { return; }
+        if (this.selected) { return; }
+        TweenMax.to(this, this.duration, { alpha: this.outAlpha, ease: this.ease });
+        return null;
+    }
 
-        if @extraButton
-            @remove = new ICButton AppData.ASSETS.sprite.textures['ic-remove-32.png'], ''
-            @remove.x = AppData.SUBMENU_PANNEL - limit/2 - 10*AppData.RATIO
-            @remove.y = 0
-            @addChild @remove
+    buttonClick() {
+        // to be override
+        return null;
+    }
 
-        @hitArea = new PIXI.Rectangle(0, 0, AppData.SUBMENU_PANNEL-limit, AppData.ICON_SIZE_1);
+    setCurrent(value) {
+        this.selected = value;
+        if (value === true) {
+            this.img.visible = true;
+            this.date.x = this.img.x + this.img.width + (AppData.PADDING/4);
+            if (this.data.label !== Session.default.name) {
+                this.date.text = 'Currently editing';
+                this.img.tint = 0x00ff00;
+            } else {
+                this.date.text = 'Currently selected';
+                this.img.tint = 0xff0000;
+            }
+            TweenMax.to(this, 0, { alpha: this.overAlpha, ease: this.ease });
+        } else {
+            this.img.visible = false;
+            this.date.x = AppData.PADDING;
+            this.date.text = this.data.date;
+            TweenMax.to(this, this.duration, { alpha: this.outAlpha, ease: this.ease });
+        }
+        return null;
+    }
 
-        @alpha = @outAlpha
-        @enable()
+    enable() {
+        this.interactive = (this.buttonMode = (this.enabled = true));
+        if (Modernizr.touch) {
+            this.on('touchstart', this.onDown);
+            this.on('touchend', this.onUp);
+            this.on('touchendoutside', this.onOut);
+        } else {
+            this.on('mousedown', this.onDown);
+            this.on('mouseup', this.onUp);
+            this.on('mouseout', this.onOut);
+            this.on('mouseover', this.onOver);
+            this.on('mouseupoutside', this.onOut);
+        }
+        return null;
+    }
 
-    onDown: =>
-        @buttonClick()
-        null
-
-    onUp: =>
-        @onOut()
-        null
-
-    onOver: =>
-        return if not @enabled
-        return if @selected
-        TweenMax.to @, 0, { alpha: @overAlpha, ease: @ease }
-        null
-
-    onOut: =>
-        return if not @enabled
-        return if @selected
-        TweenMax.to @, @duration, { alpha: @outAlpha, ease: @ease }
-        null
-
-    buttonClick: ->
-        # to be override
-        null
-
-    setCurrent: (value) ->
-        @selected = value
-        if value is true
-            @img.visible = true
-            @date.x = @img.x + @img.width + AppData.PADDING/4
-            if @data.label isnt Session.default.name
-                @date.text = 'Currently editing'
-                @img.tint = 0x00ff00
-            else
-                @date.text = 'Currently selected'
-                @img.tint = 0xff0000
-            TweenMax.to @, 0, { alpha: @overAlpha, ease: @ease }
-        else
-            @img.visible = false
-            @date.x = AppData.PADDING
-            @date.text = @data.date
-            TweenMax.to @, @duration, { alpha: @outAlpha, ease: @ease }
-        null
-
-    enable: ->
-        @interactive = @buttonMode = @enabled = true
-        if Modernizr.touch
-            @on 'touchstart', @onDown
-            @on 'touchend', @onUp
-            @on 'touchendoutside', @onOut
-        else
-            @on 'mousedown', @onDown
-            @on 'mouseup', @onUp
-            @on 'mouseout', @onOut
-            @on 'mouseover', @onOver
-            @on 'mouseupoutside', @onOut
-        null
-
-    disable: ->
-        @interactive = @buttonMode = @enabled = false
-        if Modernizr.touch
-            @off 'touchstart', @onDown
-            @off 'touchend', @onUp
-            @off 'touchendoutside', @onOut
-        else
-            @off 'mousedown', @onDown
-            @off 'mouseup', @onUp
-            @off 'mouseout', @onOut
-            @off 'mouseover', @onOver
-            @off 'mouseupoutside', @onOut
-        null
+    disable() {
+        this.interactive = (this.buttonMode = (this.enabled = false));
+        if (Modernizr.touch) {
+            this.off('touchstart', this.onDown);
+            this.off('touchend', this.onUp);
+            this.off('touchendoutside', this.onOut);
+        } else {
+            this.off('mousedown', this.onDown);
+            this.off('mouseup', this.onUp);
+            this.off('mouseout', this.onOut);
+            this.off('mouseover', this.onOver);
+            this.off('mouseupoutside', this.onOut);
+        }
+        return null;
+    }
+}

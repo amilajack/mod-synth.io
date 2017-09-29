@@ -1,55 +1,76 @@
-# import renderables.elements.*
-# import renderables.buttons.*
-# import renderables.settings.SettingsBase
-class EnvSettings extends SettingsBase
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.elements.*
+// import renderables.buttons.*
+// import renderables.settings.SettingsBase
+class EnvSettings extends SettingsBase {
 
-    constructor: (@component_session_uid) ->
-        super @component_session_uid
+    constructor(component_session_uid) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        this.handleB = this.handleB.bind(this);
+        this.component_session_uid = component_session_uid;
+        super(this.component_session_uid);
 
-        # bypass
-        @bypass = new Radio 'B'
-        @bypass.buttonClick = @handleB
-        @add @bypass
+        // bypass
+        this.bypass = new Radio('B');
+        this.bypass.buttonClick = this.handleB;
+        this.add(this.bypass);
 
-        # space
-        @add new Spacer(AppData.ICON_SPACE2)
+        // space
+        this.add(new Spacer(AppData.ICON_SPACE2));
 
-        # attack
-        @attack = new Attack @component_session_uid
-        @attack.range.min = 0
-        @attack.range.max = 2000
-        @add @attack
+        // attack
+        this.attack = new Attack(this.component_session_uid);
+        this.attack.range.min = 0;
+        this.attack.range.max = 2000;
+        this.add(this.attack);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # decay
-        @decay = new Decay @component_session_uid
-        @decay.range.min = 0
-        @decay.range.max = 2000
-        @add @decay
+        // decay
+        this.decay = new Decay(this.component_session_uid);
+        this.decay.range.min = 0;
+        this.decay.range.max = 2000;
+        this.add(this.decay);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # sustain
-        @sustain = new Sustain @component_session_uid
-        @add @sustain
+        // sustain
+        this.sustain = new Sustain(this.component_session_uid);
+        this.add(this.sustain);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # release
-        @release = new Release @component_session_uid
-        @release.range.min = 0
-        @release.range.max = 2000
-        @add @release
+        // release
+        this.release = new Release(this.component_session_uid);
+        this.release.range.min = 0;
+        this.release.range.max = 2000;
+        this.add(this.release);
 
-        @adjustPosition()
+        this.adjustPosition();
+    }
 
-    onSettingsChange: (event) =>
-        if event.component is @component_session_uid
-            @bypass.setActive Session.SETTINGS[@component_session_uid].settings.bypass
-        null
+    onSettingsChange(event) {
+        if (event.component === this.component_session_uid) {
+            this.bypass.setActive(Session.SETTINGS[this.component_session_uid].settings.bypass);
+        }
+        return null;
+    }
 
-    handleB: =>
-        Session.SETTINGS[@component_session_uid].settings.bypass = !@bypass.active
-        App.SETTINGS_CHANGE.dispatch { component: @component_session_uid }
-        null
+    handleB() {
+        Session.SETTINGS[this.component_session_uid].settings.bypass = !this.bypass.active;
+        App.SETTINGS_CHANGE.dispatch({ component: this.component_session_uid });
+        return null;
+    }
+}

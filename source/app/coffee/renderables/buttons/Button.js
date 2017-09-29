@@ -1,90 +1,123 @@
-class Button extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class Button extends PIXI.Container {
 
-    constructor: (texture) ->
-        super()
+    constructor(texture) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onHelp = this.onHelp.bind(this);
+        this.onDown = this.onDown.bind(this);
+        this.onUp = this.onUp.bind(this);
+        this.onOver = this.onOver.bind(this);
+        this.onOut = this.onOut.bind(this);
+        this.onOutside = this.onOutside.bind(this);
+        super();
 
-        App.HELP.add @onHelp
+        App.HELP.add(this.onHelp);
 
-        @texture = new PIXI.Sprite texture
-        @addChild @texture
+        this.texture = new PIXI.Sprite(texture);
+        this.addChild(this.texture);
 
-        @duration = 0.1
-        @ease = Quad.easeInOut
+        this.duration = 0.1;
+        this.ease = Quad.easeInOut;
 
-        @overAlpha = 0.22
-        @outAlpha = 0.2
-        @downAlpha = 1.0
+        this.overAlpha = 0.22;
+        this.outAlpha = 0.2;
+        this.downAlpha = 1.0;
 
-        @selected = false
+        this.selected = false;
 
-        @texture.alpha = @outAlpha
-        @code = 0
+        this.texture.alpha = this.outAlpha;
+        this.code = 0;
+    }
 
-    onHelp: (value) =>
-        # to be overriden
+    onHelp(value) {}
+        // to be overriden
 
-    onDown: =>
-        @buttonClick()
-        @select()
-        null
+    onDown() {
+        this.buttonClick();
+        this.select();
+        return null;
+    }
 
-    onUp: =>
-        @selected = false
-        @onOut()
-        null
+    onUp() {
+        this.selected = false;
+        this.onOut();
+        return null;
+    }
 
-    onOver: =>
-        return if @selected
-        TweenMax.to @texture, 0, { alpha: @overAlpha, ease: @ease }
-        null
+    onOver() {
+        if (this.selected) { return; }
+        TweenMax.to(this.texture, 0, { alpha: this.overAlpha, ease: this.ease });
+        return null;
+    }
 
-    onOut: =>
-        return if @selected
-        @unselect()
-        null
+    onOut() {
+        if (this.selected) { return; }
+        this.unselect();
+        return null;
+    }
 
-    onOutside: =>
-        return if @selected
-        @unselect()
-        null
+    onOutside() {
+        if (this.selected) { return; }
+        this.unselect();
+        return null;
+    }
 
-    select: ->
-        @selected = true
-        TweenMax.to @texture, 0, { alpha: @downAlpha, ease: @ease }
-        null
+    select() {
+        this.selected = true;
+        TweenMax.to(this.texture, 0, { alpha: this.downAlpha, ease: this.ease });
+        return null;
+    }
 
-    unselect: ->
-        @selected = false
-        TweenMax.to @texture, @duration, { alpha: @outAlpha, ease: @ease }
-        null
+    unselect() {
+        this.selected = false;
+        TweenMax.to(this.texture, this.duration, { alpha: this.outAlpha, ease: this.ease });
+        return null;
+    }
 
-    buttonClick: ->
-        null
+    buttonClick() {
+        return null;
+    }
 
-    enable: ->
-        @interactive = @buttonMode = true
-        if Modernizr.touch
-            @on 'touchstart', @onDown
-            @on 'touchend', @onUp
-            @on 'touchendoutside', @onUp
-        else
-            @on 'mousedown', @onDown
-            @on 'mouseup', @onUp
-            @on 'mouseover', @onOver
-            @on 'mouseout', @onOut
-            @on 'mouseupoutside', @onOutside
-        null
+    enable() {
+        this.interactive = (this.buttonMode = true);
+        if (Modernizr.touch) {
+            this.on('touchstart', this.onDown);
+            this.on('touchend', this.onUp);
+            this.on('touchendoutside', this.onUp);
+        } else {
+            this.on('mousedown', this.onDown);
+            this.on('mouseup', this.onUp);
+            this.on('mouseover', this.onOver);
+            this.on('mouseout', this.onOut);
+            this.on('mouseupoutside', this.onOutside);
+        }
+        return null;
+    }
 
-    disable: ->
-        @interactive = @buttonMode = false
-        if Modernizr.touch
-            @off 'touchstart', @onDown
-            @off 'touchend', @onUp
-            @off 'touchendoutside', @onOut
-        else
-            @off 'mousedown', @onDown
-            @off 'mouseup', @onUp
-            @off 'mouseover', @onOver
-            @off 'mouseout', @onOut
-            @off 'mouseupoutside', @onOutside
-        null
+    disable() {
+        this.interactive = (this.buttonMode = false);
+        if (Modernizr.touch) {
+            this.off('touchstart', this.onDown);
+            this.off('touchend', this.onUp);
+            this.off('touchendoutside', this.onOut);
+        } else {
+            this.off('mousedown', this.onDown);
+            this.off('mouseup', this.onUp);
+            this.off('mouseover', this.onOver);
+            this.off('mouseout', this.onOut);
+            this.off('mouseupoutside', this.onOutside);
+        }
+        return null;
+    }
+}

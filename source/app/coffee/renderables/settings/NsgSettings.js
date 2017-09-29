@@ -1,49 +1,72 @@
-# import renderables.elements.*
-# import renderables.settings.SettingsBase
-class NsgSettings extends SettingsBase
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.elements.*
+// import renderables.settings.SettingsBase
+class NsgSettings extends SettingsBase {
 
-    constructor: (@component_session_uid) ->
-        super @component_session_uid
+    constructor(component_session_uid) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        this.handleS = this.handleS.bind(this);
+        this.handleM = this.handleM.bind(this);
+        this.component_session_uid = component_session_uid;
+        super(this.component_session_uid);
 
-        # solo
-        @solo = new Radio 'S'
-        @solo.buttonClick = @handleS
-        @add @solo
+        // solo
+        this.solo = new Radio('S');
+        this.solo.buttonClick = this.handleS;
+        this.add(this.solo);
 
-        @add new Spacer(AppData.ICON_SPACE1)
+        this.add(new Spacer(AppData.ICON_SPACE1));
 
-        # mute
-        @mute = new Radio 'M'
-        @mute.buttonClick = @handleM
-        @add @mute
+        // mute
+        this.mute = new Radio('M');
+        this.mute.buttonClick = this.handleM;
+        this.add(this.mute);
 
-        # space
-        @add new Spacer(AppData.ICON_SPACE2)
+        // space
+        this.add(new Spacer(AppData.ICON_SPACE2));
 
-        # type
-        @type = new Noises @component_session_uid
-        @add @type
+        // type
+        this.type = new Noises(this.component_session_uid);
+        this.add(this.type);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # volume
-        @volume = new Volume @component_session_uid
-        @add @volume
+        // volume
+        this.volume = new Volume(this.component_session_uid);
+        this.add(this.volume);
 
-        @adjustPosition()
+        this.adjustPosition();
+    }
 
-    onSettingsChange: (event) =>
-        if event.component is @component_session_uid
-            @solo.setActive Session.SETTINGS[@component_session_uid].settings.solo
-            @mute.setActive Session.SETTINGS[@component_session_uid].settings.mute
-        null
+    onSettingsChange(event) {
+        if (event.component === this.component_session_uid) {
+            this.solo.setActive(Session.SETTINGS[this.component_session_uid].settings.solo);
+            this.mute.setActive(Session.SETTINGS[this.component_session_uid].settings.mute);
+        }
+        return null;
+    }
 
-    handleS: =>
-        Session.HANDLE_SOLO @component_session_uid
-        null
+    handleS() {
+        Session.HANDLE_SOLO(this.component_session_uid);
+        return null;
+    }
 
-    handleM: =>
-        return if Session.SETTINGS[@component_session_uid].settings.solo is true
-        Session.SETTINGS[@component_session_uid].settings.mute = !@mute.active
-        App.SETTINGS_CHANGE.dispatch { component: @component_session_uid }
-        null
+    handleM() {
+        if (Session.SETTINGS[this.component_session_uid].settings.solo === true) { return; }
+        Session.SETTINGS[this.component_session_uid].settings.mute = !this.mute.active;
+        App.SETTINGS_CHANGE.dispatch({ component: this.component_session_uid });
+        return null;
+    }
+}

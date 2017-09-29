@@ -1,130 +1,173 @@
-# import audio.components.Component
-class NoiseGenerator extends Component
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS202: Simplify dynamic range loops
+ * DS206: Consider reworking classes to avoid initClass
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import audio.components.Component
+class NoiseGenerator extends Component {
+    static initClass() {
+    
+        this.property('type', {
+            get() {
+                return this.parameters.type;
+            },
+            set(value) {
+                if (this.parameters.type === value) { return this.parameters.type; }
+    
+                this.parameters.type = value;
+    
+                switch (this.parameters.type) {
+                    case Audio.NOISE_TYPE[AppData.NOISE_TYPE.PINK]: this.buffer = this.getPink(); break;
+                    case Audio.NOISE_TYPE[AppData.NOISE_TYPE.BROWN]: this.buffer = this.getBrown(); break;
+                    default:
+                        this.buffer = this.getWhite();
+                }
+    
+                this.destroy();
+                this.create();
+                return this.parameters.type;
+            }
+        }
+        );
+    }
 
-    constructor: (data) ->
-        super data
+    constructor(data) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        super(data);
 
-        @parameters.type = Audio.NOISE_TYPE[data.settings.noise_type]
+        this.parameters.type = Audio.NOISE_TYPE[data.settings.noise_type];
 
-        @envelope = Audio.CONTEXT.createGain()
-        @envelope.gain.value = 0.0
-        @envelope.connect @pre
+        this.envelope = Audio.CONTEXT.createGain();
+        this.envelope.gain.value = 0.0;
+        this.envelope.connect(this.pre);
 
-        @buffer = @getWhite()
-        @create()
+        this.buffer = this.getWhite();
+        this.create();
 
-        App.SETTINGS_CHANGE.add @onSettingsChange
+        App.SETTINGS_CHANGE.add(this.onSettingsChange);
+    }
 
-    destroy: ->
-        @generator.stop 0
-        @output.gain.value = 0.0
-        @generator = null
-        null
+    destroy() {
+        this.generator.stop(0);
+        this.output.gain.value = 0.0;
+        this.generator = null;
+        return null;
+    }
 
-    create: ->
-        @generator = Audio.CONTEXT.createBufferSource()
-        @generator.buffer = @buffer
-        @generator.loop = true
-        @generator.start 0
-        @generator.connect @envelope
-        null
+    create() {
+        this.generator = Audio.CONTEXT.createBufferSource();
+        this.generator.buffer = this.buffer;
+        this.generator.loop = true;
+        this.generator.start(0);
+        this.generator.connect(this.envelope);
+        return null;
+    }
 
-    onSettingsChange: (event) =>
-        if event.component is @component_session_uid
-            @type = Audio.NOISE_TYPE[Session.SETTINGS[@component_session_uid].settings.noise_type]
-            @setVolume MathUtils.map(Session.SETTINGS[@component_session_uid].settings.volume,  -60, 0, 0, 1)
-        null
+    onSettingsChange(event) {
+        if (event.component === this.component_session_uid) {
+            this.type = Audio.NOISE_TYPE[Session.SETTINGS[this.component_session_uid].settings.noise_type];
+            this.setVolume(MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.volume,  -60, 0, 0, 1));
+        }
+        return null;
+    }
 
-    start: (frequency) ->
-        @checkAUX()
+    start(frequency) {
+        this.checkAUX();
 
-        now = Audio.CONTEXT.currentTime
-        envAttackEnd = now + @attack/1000.0
+        const now = Audio.CONTEXT.currentTime;
+        const envAttackEnd = now + (this.attack/1000.0);
 
-        @active.push frequency
+        this.active.push(frequency);
 
-        @envelope.attackStart = now
-        @envelope.attackEnd = envAttackEnd
-        @envelope.gain.cancelScheduledValues now
-        @envelope.gain.setValueAtTime 0.0, now
-        if Session.SETTINGS[@component_session_uid].settings.mute is false
-            @envelope.gain.linearRampToValueAtTime 1.0, envAttackEnd
-            @envelope.gain.setTargetAtTime (@sustain*1.0)/100.0, envAttackEnd, (@decay/1000.0)+0.001
-        null
+        this.envelope.attackStart = now;
+        this.envelope.attackEnd = envAttackEnd;
+        this.envelope.gain.cancelScheduledValues(now);
+        this.envelope.gain.setValueAtTime(0.0, now);
+        if (Session.SETTINGS[this.component_session_uid].settings.mute === false) {
+            this.envelope.gain.linearRampToValueAtTime(1.0, envAttackEnd);
+            this.envelope.gain.setTargetAtTime((this.sustain*1.0)/100.0, envAttackEnd, (this.decay/1000.0)+0.001);
+        }
+        return null;
+    }
 
-    stop: (frequency) ->
-        index = @active.indexOf frequency
+    stop(frequency) {
+        const index = this.active.indexOf(frequency);
 
-        if index isnt -1
-            @checkAUX()
-            @active.splice index, 1
+        if (index !== -1) {
+            this.checkAUX();
+            this.active.splice(index, 1);
 
-            now = Audio.CONTEXT.currentTime
-            release = now + (@release/1000.0)
+            const now = Audio.CONTEXT.currentTime;
+            const release = now + (this.release/1000.0);
 
-            if @active.length is 0
-                rampValue = @getRampValue(0, 1, @envelope.attackStart, @envelope.attackEnd, now)
-                if Session.SETTINGS[@component_session_uid].settings.mute is true
-                    rampValue = 0
-                @envelope.gain.cancelScheduledValues now
-                @envelope.gain.setValueAtTime rampValue, now
-                @envelope.gain.linearRampToValueAtTime 0, release
-        null
+            if (this.active.length === 0) {
+                let rampValue = this.getRampValue(0, 1, this.envelope.attackStart, this.envelope.attackEnd, now);
+                if (Session.SETTINGS[this.component_session_uid].settings.mute === true) {
+                    rampValue = 0;
+                }
+                this.envelope.gain.cancelScheduledValues(now);
+                this.envelope.gain.setValueAtTime(rampValue, now);
+                this.envelope.gain.linearRampToValueAtTime(0, release);
+            }
+        }
+        return null;
+    }
 
-    getWhite: ->
-        bufferSize = 2 * Audio.CONTEXT.sampleRate
-        buffer = Audio.CONTEXT.createBuffer 1, bufferSize, Audio.CONTEXT.sampleRate
-        output = buffer.getChannelData 0
-        for i in [0...bufferSize]
-            white = Math.random() * 2 - 1
-            output[i] = white
-        return buffer
+    getWhite() {
+        const bufferSize = 2 * Audio.CONTEXT.sampleRate;
+        const buffer = Audio.CONTEXT.createBuffer(1, bufferSize, Audio.CONTEXT.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0, end = bufferSize, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const white = (Math.random() * 2) - 1;
+            output[i] = white;
+        }
+        return buffer;
+    }
 
-    getPink: ->
-        b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0
-        bufferSize = 2 * Audio.CONTEXT.sampleRate
-        buffer = Audio.CONTEXT.createBuffer 1, bufferSize, Audio.CONTEXT.sampleRate
-        output = buffer.getChannelData 0
-        for i in [0...bufferSize]
-            white = Math.random() * 1 - 0.5
-            b0 = 0.99886 * b0 + white * 0.0555179
-            b1 = 0.99332 * b1 + white * 0.0750759
-            b2 = 0.96900 * b2 + white * 0.1538520
-            b3 = 0.86650 * b3 + white * 0.3104856
-            b4 = 0.55000 * b4 + white * 0.5329522
-            b5 = -0.7616 * b5 - white * 0.0168980
+    getPink() {
+        let b1, b2, b3, b4, b5, b6;
+        let b0 = (b1 = (b2 = (b3 = (b4 = (b5 = (b6 = 0.0))))));
+        const bufferSize = 2 * Audio.CONTEXT.sampleRate;
+        const buffer = Audio.CONTEXT.createBuffer(1, bufferSize, Audio.CONTEXT.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0, end = bufferSize, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const white = (Math.random() * 1) - 0.5;
+            b0 = (0.99886 * b0) + (white * 0.0555179);
+            b1 = (0.99332 * b1) + (white * 0.0750759);
+            b2 = (0.96900 * b2) + (white * 0.1538520);
+            b3 = (0.86650 * b3) + (white * 0.3104856);
+            b4 = (0.55000 * b4) + (white * 0.5329522);
+            b5 = (-0.7616 * b5) - (white * 0.0168980);
 
-            output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362
-            output[i] *= 0.11
-            b6 = white * 0.115926
-        return buffer
+            output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + (white * 0.5362);
+            output[i] *= 0.11;
+            b6 = white * 0.115926;
+        }
+        return buffer;
+    }
 
-    getBrown: ->
-        lastOut = 0.0
-        bufferSize = 2 * Audio.CONTEXT.sampleRate
-        buffer = Audio.CONTEXT.createBuffer 1, bufferSize, Audio.CONTEXT.sampleRate
-        output = buffer.getChannelData 0
-        for i in [0...bufferSize]
-            white = Math.random() * 1 - 0.5
-            output[i] = (lastOut + (0.02 * white)) / 1.02
-            lastOut = output[i]
-            output[i] *= 3.5
-        return buffer
-
-    @property 'type',
-        get: ->
-            return @parameters.type
-        set: (value) ->
-            return @parameters.type if @parameters.type is value
-
-            @parameters.type = value
-
-            switch @parameters.type
-                when Audio.NOISE_TYPE[AppData.NOISE_TYPE.PINK] then @buffer = @getPink()
-                when Audio.NOISE_TYPE[AppData.NOISE_TYPE.BROWN] then @buffer = @getBrown()
-                else
-                    @buffer = @getWhite()
-
-            @destroy()
-            @create()
-            return @parameters.type
+    getBrown() {
+        let lastOut = 0.0;
+        const bufferSize = 2 * Audio.CONTEXT.sampleRate;
+        const buffer = Audio.CONTEXT.createBuffer(1, bufferSize, Audio.CONTEXT.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0, end = bufferSize, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+            const white = (Math.random() * 1) - 0.5;
+            output[i] = (lastOut + (0.02 * white)) / 1.02;
+            lastOut = output[i];
+            output[i] *= 3.5;
+        }
+        return buffer;
+    }
+}
+NoiseGenerator.initClass();

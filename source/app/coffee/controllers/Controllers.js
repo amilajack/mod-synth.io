@@ -1,8 +1,10 @@
-# import controllers.MidiController
-# import controllers.KeyboardController
-class Controllers
+// import controllers.MidiController
+// import controllers.KeyboardController
+class Controllers {
 
-    constructor: ->
+    constructor() {
 
-        @midi = new MidiController()
-        @keyboard = new KeyboardController()
+        this.midi = new MidiController();
+        this.keyboard = new KeyboardController();
+    }
+}

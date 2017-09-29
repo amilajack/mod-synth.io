@@ -1,87 +1,116 @@
-class SubmenuButtonMidi extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class SubmenuButtonMidi extends PIXI.Container {
 
-    constructor: (label, opt_texture) ->
-        super()
+    constructor(label, opt_texture) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onDown = this.onDown.bind(this);
+        this.onUp = this.onUp.bind(this);
+        this.onOver = this.onOver.bind(this);
+        this.onOut = this.onOut.bind(this);
+        super();
 
-        @graphics = new PIXI.Graphics()
-        @graphics.beginFill 0x00ffff, 0
-        @graphics.drawRect 0, 0, AppData.SUBMENU_PANNEL, AppData.ICON_SIZE_1
-        @addChild @graphics
+        this.graphics = new PIXI.Graphics();
+        this.graphics.beginFill(0x00ffff, 0);
+        this.graphics.drawRect(0, 0, AppData.SUBMENU_PANNEL, AppData.ICON_SIZE_1);
+        this.addChild(this.graphics);
 
-        @duration = 0.3
-        @ease = Quad.easeInOut
-        @enabled = false
-        @overAlpha = 1.0
-        @outAlpha = 0.65
+        this.duration = 0.3;
+        this.ease = Quad.easeInOut;
+        this.enabled = false;
+        this.overAlpha = 1.0;
+        this.outAlpha = 0.65;
 
-        @img = new PIXI.Sprite opt_texture
-        @img.anchor.x = 0.5
-        @img.anchor.y = 0.5
-        @img.x = AppData.PADDING + AppData.ICON_SIZE_2/2
-        @img.y = AppData.ICON_SIZE_1 / 2
-        if opt_texture
-            @addChild @img
-            @graphics.beginFill 0x00ffff, 0
-            @graphics.drawRect AppData.PADDING, 0, AppData.ICON_SIZE_2, AppData.ICON_SIZE_1
+        this.img = new PIXI.Sprite(opt_texture);
+        this.img.anchor.x = 0.5;
+        this.img.anchor.y = 0.5;
+        this.img.x = AppData.PADDING + (AppData.ICON_SIZE_2/2);
+        this.img.y = AppData.ICON_SIZE_1 / 2;
+        if (opt_texture) {
+            this.addChild(this.img);
+            this.graphics.beginFill(0x00ffff, 0);
+            this.graphics.drawRect(AppData.PADDING, 0, AppData.ICON_SIZE_2, AppData.ICON_SIZE_1);
+        }
 
-        @label = new PIXI.Text label.toUpperCase(), AppData.TEXTFORMAT.MENU
-        @label.anchor.y = 0.5
-        @label.scale.x = @label.scale.y = 0.5
-        @label.position.x = if opt_texture then AppData.ICON_SIZE_2 + 40 * AppData.RATIO else AppData.PADDING
-        @label.position.y = AppData.ICON_SIZE_1 / 2
-        @label.alpha = @outAlpha
-        @addChild @label
+        this.label = new PIXI.Text(label.toUpperCase(), AppData.TEXTFORMAT.MENU);
+        this.label.anchor.y = 0.5;
+        this.label.scale.x = (this.label.scale.y = 0.5);
+        this.label.position.x = opt_texture ? AppData.ICON_SIZE_2 + (40 * AppData.RATIO) : AppData.PADDING;
+        this.label.position.y = AppData.ICON_SIZE_1 / 2;
+        this.label.alpha = this.outAlpha;
+        this.addChild(this.label);
 
-        @hitArea = new PIXI.Rectangle(0, 0, AppData.SUBMENU_PANNEL, AppData.ICON_SIZE_1);
+        this.hitArea = new PIXI.Rectangle(0, 0, AppData.SUBMENU_PANNEL, AppData.ICON_SIZE_1);
 
-        @enable()
+        this.enable();
+    }
 
-    onDown: =>
-        @buttonClick()
-        null
+    onDown() {
+        this.buttonClick();
+        return null;
+    }
 
-    onUp: =>
-        @onOut()
-        null
+    onUp() {
+        this.onOut();
+        return null;
+    }
 
-    onOver: =>
-        return if not @enabled
-        TweenMax.to @label, 0, { alpha: @overAlpha, ease: @ease }
-        null
+    onOver() {
+        if (!this.enabled) { return; }
+        TweenMax.to(this.label, 0, { alpha: this.overAlpha, ease: this.ease });
+        return null;
+    }
 
-    onOut: =>
-        return if not @enabled
-        TweenMax.to @label, @duration, { alpha: @outAlpha, ease: @ease }
-        null
+    onOut() {
+        if (!this.enabled) { return; }
+        TweenMax.to(this.label, this.duration, { alpha: this.outAlpha, ease: this.ease });
+        return null;
+    }
 
-    buttonClick: ->
-        # to be override
-        null
+    buttonClick() {
+        // to be override
+        return null;
+    }
 
-    enable: ->
-        @interactive = @buttonMode = @enabled = true
-        if Modernizr.touch
-            @on 'touchstart', @onDown
-            @on 'touchend', @onUp
-            @on 'touchendoutside', @onOut
-        else
-            @on 'mousedown', @onDown
-            @on 'mouseup', @onUp
-            @on 'mouseout', @onOut
-            @on 'mouseover', @onOver
-            @on 'mouseupoutside', @onOut
-        null
+    enable() {
+        this.interactive = (this.buttonMode = (this.enabled = true));
+        if (Modernizr.touch) {
+            this.on('touchstart', this.onDown);
+            this.on('touchend', this.onUp);
+            this.on('touchendoutside', this.onOut);
+        } else {
+            this.on('mousedown', this.onDown);
+            this.on('mouseup', this.onUp);
+            this.on('mouseout', this.onOut);
+            this.on('mouseover', this.onOver);
+            this.on('mouseupoutside', this.onOut);
+        }
+        return null;
+    }
 
-    disable: ->
-        @interactive = @buttonMode = @enabled = false
-        if Modernizr.touch
-            @off 'touchstart', @onDown
-            @off 'touchend', @onUp
-            @off 'touchendoutside', @onOut
-        else
-            @off 'mousedown', @onDown
-            @off 'mouseup', @onUp
-            @off 'mouseout', @onOut
-            @off 'mouseover', @onOver
-            @off 'mouseupoutside', @onOut
-        null
+    disable() {
+        this.interactive = (this.buttonMode = (this.enabled = false));
+        if (Modernizr.touch) {
+            this.off('touchstart', this.onDown);
+            this.off('touchend', this.onUp);
+            this.off('touchendoutside', this.onOut);
+        } else {
+            this.off('mousedown', this.onDown);
+            this.off('mouseup', this.onUp);
+            this.off('mouseout', this.onOut);
+            this.off('mouseover', this.onOver);
+            this.off('mouseupoutside', this.onOut);
+        }
+        return null;
+    }
+}

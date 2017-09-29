@@ -1,98 +1,133 @@
-class Vec2
+/*
+ * decaffeinate suggestions:
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class Vec2 {
 
-    @add: (v1, v2) ->
-        return new Vec2 v1.x+v2.x, v1.y+v2.y
+    static add(v1, v2) {
+        return new Vec2(v1.x+v2.x, v1.y+v2.y);
+    }
 
-    @subtract: (v1, v2) ->
-        return new Vec2 v1.x-v2.x, v1.y-v2.y
+    static subtract(v1, v2) {
+        return new Vec2(v1.x-v2.x, v1.y-v2.y);
+    }
 
-    constructor: (@x=0, @y=0) ->
+    constructor(x, y) {
+        if (x == null) { x = 0; }
+        this.x = x;
+        if (y == null) { y = 0; }
+        this.y = y;
+    }
 
-    clone: ->
-        return new Vec2 @x, @y
+    clone() {
+        return new Vec2(this.x, this.y);
+    }
 
-    add: (v2) ->
-        @x += v2.x
-        @y += v2.y
-        return @
+    add(v2) {
+        this.x += v2.x;
+        this.y += v2.y;
+        return this;
+    }
 
-    subtract: (v2) ->
-        @x -= v2.x
-        @y -= v2.y
-        return @
+    subtract(v2) {
+        this.x -= v2.x;
+        this.y -= v2.y;
+        return this;
+    }
 
-    scale: (value) ->
-        @x *= value
-        @y *= value
-        return @
+    scale(value) {
+        this.x *= value;
+        this.y *= value;
+        return this;
+    }
 
-    divide: (value) ->
-        @x /= value
-        @y /= value
-        return @
+    divide(value) {
+        this.x /= value;
+        this.y /= value;
+        return this;
+    }
 
-    copy: (v2) ->
-        @x = v2.x
-        @y = v2.y
-        return @
+    copy(v2) {
+        this.x = v2.x;
+        this.y = v2.y;
+        return this;
+    }
 
-    set: (@x, @y) ->
-        return @
+    set(x, y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
 
-    invert: ->
-        @x = -@x
-        @y = -@y
-        return @
+    invert() {
+        this.x = -this.x;
+        this.y = -this.y;
+        return this;
+    }
 
-    dot: (v) ->
-        return @x * v.x + @y * v.y
+    dot(v) {
+        return (this.x * v.x) + (this.y * v.y);
+    }
 
-    rotate: (theta) ->
-        co = Math.cos(theta)
-        si = Math.sin(theta)
-        xx = co * @x - si * @y
-        @y = si * @x + co * @y
-        @x = xx
-        return @
+    rotate(theta) {
+        const co = Math.cos(theta);
+        const si = Math.sin(theta);
+        const xx = (co * this.x) - (si * this.y);
+        this.y = (si * this.x) + (co * this.y);
+        this.x = xx;
+        return this;
+    }
 
-    angle: ->
-        return Math.atan2( @y, @x )
+    angle() {
+        return Math.atan2( this.y, this.x );
+    }
 
-    angleBetween: (v) ->
-        vv = v.clone()
-        aa = @clone()
-        vv.normalize()
-        aa.normalize()
-        return Math.acos aa.dot(vv)
+    angleBetween(v) {
+        const vv = v.clone();
+        const aa = this.clone();
+        vv.normalize();
+        aa.normalize();
+        return Math.acos(aa.dot(vv));
+    }
 
-    length: ->
-        return Math.sqrt @x*@x + @y*@y
+    length() {
+        return Math.sqrt((this.x*this.x) + (this.y*this.y));
+    }
 
-    abs: ->
-        @x = Math.abs @x
-        @y = Math.abs @y
-        return @
+    abs() {
+        this.x = Math.abs(this.x);
+        this.y = Math.abs(this.y);
+        return this;
+    }
 
-    clamp: (min, max) ->
-        if @x > max
-            @x = max
-        else if @x < min
-            @x = min
-        if @y > max
-            @y = max
-        else if @y < min
-            @y = min
-        return @
+    clamp(min, max) {
+        if (this.x > max) {
+            this.x = max;
+        } else if (this.x < min) {
+            this.x = min;
+        }
+        if (this.y > max) {
+            this.y = max;
+        } else if (this.y < min) {
+            this.y = min;
+        }
+        return this;
+    }
 
-    normalize: ->
-        len = @length()
-        if len isnt 0
-            @x = @x/len
-            @y = @y/len
-        return @
+    normalize() {
+        const len = this.length();
+        if (len !== 0) {
+            this.x = this.x/len;
+            this.y = this.y/len;
+        }
+        return this;
+    }
 
-    interpolateTo: (v2, easing) ->
-        diff = Vec2.subtract v2, @
-        diff.scale easing
-        @add diff
-        return @
+    interpolateTo(v2, easing) {
+        const diff = Vec2.subtract(v2, this);
+        diff.scale(easing);
+        this.add(diff);
+        return this;
+    }
+}

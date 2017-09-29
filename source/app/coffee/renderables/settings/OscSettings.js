@@ -1,81 +1,106 @@
-# import renderables.elements.*
-# import renderables.buttons.*
-# import renderables.settings.SettingsBase
-class OscSettings extends SettingsBase
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.elements.*
+// import renderables.buttons.*
+// import renderables.settings.SettingsBase
+class OscSettings extends SettingsBase {
 
-    constructor: (@component_session_uid) ->
-        super @component_session_uid
+    constructor(component_session_uid) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        this.handleS = this.handleS.bind(this);
+        this.handleM = this.handleM.bind(this);
+        this.handleP = this.handleP.bind(this);
+        this.component_session_uid = component_session_uid;
+        super(this.component_session_uid);
 
-        # solo
-        @solo = new Radio 'S'
-        @solo.buttonClick = @handleS
-        @add @solo
+        // solo
+        this.solo = new Radio('S');
+        this.solo.buttonClick = this.handleS;
+        this.add(this.solo);
 
-        @add new Spacer(AppData.ICON_SPACE1)
+        this.add(new Spacer(AppData.ICON_SPACE1));
 
-        # mute
-        @mute = new Radio 'M'
-        @mute.buttonClick = @handleM
-        @add @mute
+        // mute
+        this.mute = new Radio('M');
+        this.mute.buttonClick = this.handleM;
+        this.add(this.mute);
 
-        @add new Spacer(AppData.ICON_SPACE1)
+        this.add(new Spacer(AppData.ICON_SPACE1));
 
-        # polyphonic
-        @poly = new Poly()
-        @poly.buttonClick = @handleP
-        @add @poly
+        // polyphonic
+        this.poly = new Poly();
+        this.poly.buttonClick = this.handleP;
+        this.add(this.poly);
 
-        # space
-        @add new Spacer(AppData.ICON_SPACE2)
+        // space
+        this.add(new Spacer(AppData.ICON_SPACE2));
 
-        # wave type
-        @type = new Waves @component_session_uid
-        @add @type
+        // wave type
+        this.type = new Waves(this.component_session_uid);
+        this.add(this.type);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # octave
-        @octave = new Octave @component_session_uid
-        @add @octave
+        // octave
+        this.octave = new Octave(this.component_session_uid);
+        this.add(this.octave);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # portamento
-        @portamento = new Portamento @component_session_uid
-        @add @portamento
+        // portamento
+        this.portamento = new Portamento(this.component_session_uid);
+        this.add(this.portamento);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # detune
-        @detune = new Detune @component_session_uid
-        @add @detune
+        // detune
+        this.detune = new Detune(this.component_session_uid);
+        this.add(this.detune);
 
-        @add new Spacer(AppData.ICON_SPACE3)
+        this.add(new Spacer(AppData.ICON_SPACE3));
 
-        # volume
-        @volume = new Volume @component_session_uid
-        @add @volume
+        // volume
+        this.volume = new Volume(this.component_session_uid);
+        this.add(this.volume);
 
-        @adjustPosition()
+        this.adjustPosition();
+    }
 
-    onSettingsChange: (event) =>
-        if event.component is @component_session_uid
-            @solo.setActive Session.SETTINGS[@component_session_uid].settings.solo
-            @mute.setActive Session.SETTINGS[@component_session_uid].settings.mute
-            @poly.setActive Session.SETTINGS[@component_session_uid].settings.poly
-        null
+    onSettingsChange(event) {
+        if (event.component === this.component_session_uid) {
+            this.solo.setActive(Session.SETTINGS[this.component_session_uid].settings.solo);
+            this.mute.setActive(Session.SETTINGS[this.component_session_uid].settings.mute);
+            this.poly.setActive(Session.SETTINGS[this.component_session_uid].settings.poly);
+        }
+        return null;
+    }
 
-    handleS: =>
-        Session.HANDLE_SOLO @component_session_uid
-        null
+    handleS() {
+        Session.HANDLE_SOLO(this.component_session_uid);
+        return null;
+    }
 
-    handleM: =>
-        return if Session.SETTINGS[@component_session_uid].settings.solo is true
-        Session.SETTINGS[@component_session_uid].settings.mute = !@mute.active
-        App.SETTINGS_CHANGE.dispatch { component: @component_session_uid }
-        null
+    handleM() {
+        if (Session.SETTINGS[this.component_session_uid].settings.solo === true) { return; }
+        Session.SETTINGS[this.component_session_uid].settings.mute = !this.mute.active;
+        App.SETTINGS_CHANGE.dispatch({ component: this.component_session_uid });
+        return null;
+    }
 
-    handleP: =>
-        Session.SETTINGS[@component_session_uid].settings.poly = !@poly.active
-        App.SETTINGS_CHANGE.dispatch { component: @component_session_uid }
-        null
+    handleP() {
+        Session.SETTINGS[this.component_session_uid].settings.poly = !this.poly.active;
+        App.SETTINGS_CHANGE.dispatch({ component: this.component_session_uid });
+        return null;
+    }
+}

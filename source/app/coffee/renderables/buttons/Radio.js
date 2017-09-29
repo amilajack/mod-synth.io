@@ -1,52 +1,75 @@
-class Radio extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class Radio extends PIXI.Container {
 
-    constructor: (label) ->
-        super()
+    constructor(label) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.onDown = this.onDown.bind(this);
+        super();
 
-        @img = new PIXI.Sprite AppData.ASSETS.sprite.textures['48-circle-nofill.png']
-        @addChild @img
+        this.img = new PIXI.Sprite(AppData.ASSETS.sprite.textures['48-circle-nofill.png']);
+        this.addChild(this.img);
 
-        @title = new PIXI.Text label.toUpperCase(), AppData.TEXTFORMAT.SETTINGS_SMB
-        @title.scale.x = @title.scale.y = 0.5
-        @title.anchor.x = 0.5
-        @title.anchor.y = 0.5
-        @title.x = @img.width / 2
-        @title.y = @img.height / 2
-        @title.tint = 0x5A5A5A
-        @addChild @title
+        this.title = new PIXI.Text(label.toUpperCase(), AppData.TEXTFORMAT.SETTINGS_SMB);
+        this.title.scale.x = (this.title.scale.y = 0.5);
+        this.title.anchor.x = 0.5;
+        this.title.anchor.y = 0.5;
+        this.title.x = this.img.width / 2;
+        this.title.y = this.img.height / 2;
+        this.title.tint = 0x5A5A5A;
+        this.addChild(this.title);
 
-        @active = false
-        @interactive = @buttonMode = true
+        this.active = false;
+        this.interactive = (this.buttonMode = true);
 
-        if Modernizr.touch
-            @on 'touchstart', @onDown
-        else
-            @on 'mousedown', @onDown
+        if (Modernizr.touch) {
+            this.on('touchstart', this.onDown);
+        } else {
+            this.on('mousedown', this.onDown);
+        }
+    }
 
-    onDown: =>
-        @buttonClick()
-        null
+    onDown() {
+        this.buttonClick();
+        return null;
+    }
 
-    select: ->
-        @img.texture = AppData.ASSETS.sprite.textures['48-circle-fill.png']
-        @img.tint = 0xffffff
+    select() {
+        this.img.texture = AppData.ASSETS.sprite.textures['48-circle-fill.png'];
+        this.img.tint = 0xffffff;
 
-        TweenMax.to @img, 0, { alpha: 1.0, ease: Quad.easeInOut }
-        null
+        TweenMax.to(this.img, 0, { alpha: 1.0, ease: Quad.easeInOut });
+        return null;
+    }
 
-    unselect: ->
-        TweenMax.to @img, 0, { alpha: 0.2, ease: Quad.easeInOut }
-        @img.texture = AppData.ASSETS.sprite.textures['48-circle-nofill.png']
-        @img.tint = 0x5A5A5A
-        null
+    unselect() {
+        TweenMax.to(this.img, 0, { alpha: 0.2, ease: Quad.easeInOut });
+        this.img.texture = AppData.ASSETS.sprite.textures['48-circle-nofill.png'];
+        this.img.tint = 0x5A5A5A;
+        return null;
+    }
 
-    buttonClick: ->
-        null
+    buttonClick() {
+        return null;
+    }
 
-    setActive: (value) ->
-        @active = value
-        if @active
-            @select()
-        else
-            @unselect()
-        null
+    setActive(value) {
+        this.active = value;
+        if (this.active) {
+            this.select();
+        } else {
+            this.unselect();
+        }
+        return null;
+    }
+}

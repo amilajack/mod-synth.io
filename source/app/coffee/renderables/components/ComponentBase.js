@@ -1,81 +1,106 @@
-class ComponentBase extends PIXI.Container
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class ComponentBase extends PIXI.Container {
 
-    constructor: (component_session_uid) ->
-        super()
-
-        App.TOGGLE_SETTINGS_PANNEL_HEIGHT.add @onToggle
-        App.SETTINGS_CHANGE.add @onSettingsChange
-
-        @component_session_uid = component_session_uid
-
-        @__color = AppData.COLORS[Session.SETTINGS[@component_session_uid].type_uid]
-        @__alpha = 1
-
-        @highlight = false
-
-        @bg = new PIXI.Sprite()
-        @bg.anchor.x = 0.5
-        @bg.anchor.y = 0.5
-        @bg.scale.x = 0
-        @bg.scale.y = 0
-        @addChild @bg
-
-        @over = new PIXI.Sprite()
-        @over.anchor.x = 0.5
-        @over.anchor.y = 0.5
-        @over.alpha = 0
-        @addChild @over
-
-        @front = new PIXI.Container()
-        @front.alpha = 0
-        @addChild @front
-
-        @label = new PIXI.Text AppData.TITLE[Session.SETTINGS[@component_session_uid].type_uid], AppData.TEXTFORMAT.SETTINGS_TITLE
-        @label.scale.x = @label.scale.y = 0.5
-        @front.addChild @label
-
-        @icon = new PIXI.Sprite()
-        @icon.anchor.x = 0.5
-        @icon.anchor.y = 0.5
-        @front.addChild @icon
-
-        @interactive = false
-        @hitArea = new PIXI.Rectangle(0, 0, 0, 0);
-
-    onToggle: (value) =>
-        @highlight = false
-        # highlight just the selected component
-        if value.component_session_uid is @component_session_uid
-            @highlight = value.type
-        @over.alpha = if @highlight is true then 1 else 0
-        null
-
-    onAdd: (onComplete) ->
-        @bg.rotation = 360*Math.PI/360
-
-        TweenMax.to @bg,        0.5, { rotation: 0, ease: Power2.easeInOut }
-        TweenMax.to @bg.scale,  0.5, { x: 1, y: 1, ease: Power4.easeInOut, onComplete: =>
-            TweenMax.to @front, 0.6, { alpha: 1, onComplete: onComplete }
-            null
+    constructor(component_session_uid) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
         }
-        null
+        this.onToggle = this.onToggle.bind(this);
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        super();
 
-    onRemove: (onComplete) ->
-        App.TOGGLE_SETTINGS_PANNEL_HEIGHT.remove @onToggle
-        App.SETTINGS_CHANGE.remove @onSettingsChange
+        App.TOGGLE_SETTINGS_PANNEL_HEIGHT.add(this.onToggle);
+        App.SETTINGS_CHANGE.add(this.onSettingsChange);
 
-        TweenMax.to @front,         0.3, { alpha: 0, onComplete: =>
-            TweenMax.to @bg,        0.3, { rotation: 360*Math.PI/360, ease: Power2.easeInOut }
-            TweenMax.to @bg.scale,  0.3, { x: 0, y: 0, ease: Power4.easeInOut, onComplete: onComplete }
-            null
+        this.component_session_uid = component_session_uid;
+
+        this.__color = AppData.COLORS[Session.SETTINGS[this.component_session_uid].type_uid];
+        this.__alpha = 1;
+
+        this.highlight = false;
+
+        this.bg = new PIXI.Sprite();
+        this.bg.anchor.x = 0.5;
+        this.bg.anchor.y = 0.5;
+        this.bg.scale.x = 0;
+        this.bg.scale.y = 0;
+        this.addChild(this.bg);
+
+        this.over = new PIXI.Sprite();
+        this.over.anchor.x = 0.5;
+        this.over.anchor.y = 0.5;
+        this.over.alpha = 0;
+        this.addChild(this.over);
+
+        this.front = new PIXI.Container();
+        this.front.alpha = 0;
+        this.addChild(this.front);
+
+        this.label = new PIXI.Text(AppData.TITLE[Session.SETTINGS[this.component_session_uid].type_uid], AppData.TEXTFORMAT.SETTINGS_TITLE);
+        this.label.scale.x = (this.label.scale.y = 0.5);
+        this.front.addChild(this.label);
+
+        this.icon = new PIXI.Sprite();
+        this.icon.anchor.x = 0.5;
+        this.icon.anchor.y = 0.5;
+        this.front.addChild(this.icon);
+
+        this.interactive = false;
+        this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+    }
+
+    onToggle(value) {
+        this.highlight = false;
+        // highlight just the selected component
+        if (value.component_session_uid === this.component_session_uid) {
+            this.highlight = value.type;
         }
-        null
+        this.over.alpha = this.highlight === true ? 1 : 0;
+        return null;
+    }
 
-    onSettingsChange: (event) =>
-        return if event.component is not @component_session_uid
-        @change()
-        null
+    onAdd(onComplete) {
+        this.bg.rotation = (360*Math.PI)/360;
 
-    change: ->
-        # to be overriden
-        null
+        TweenMax.to(this.bg,        0.5, { rotation: 0, ease: Power2.easeInOut });
+        TweenMax.to(this.bg.scale,  0.5, { x: 1, y: 1, ease: Power4.easeInOut, onComplete: () => {
+            TweenMax.to(this.front, 0.6, { alpha: 1, onComplete });
+            return null;
+        }
+        });
+        return null;
+    }
+
+    onRemove(onComplete) {
+        App.TOGGLE_SETTINGS_PANNEL_HEIGHT.remove(this.onToggle);
+        App.SETTINGS_CHANGE.remove(this.onSettingsChange);
+
+        TweenMax.to(this.front,         0.3, { alpha: 0, onComplete: () => {
+            TweenMax.to(this.bg,        0.3, { rotation: (360*Math.PI)/360, ease: Power2.easeInOut });
+            TweenMax.to(this.bg.scale,  0.3, { x: 0, y: 0, ease: Power4.easeInOut, onComplete });
+            return null;
+        }
+        });
+        return null;
+    }
+
+    onSettingsChange(event) {
+        if (event.component === !this.component_session_uid) { return; }
+        this.change();
+        return null;
+    }
+
+    change() {
+        // to be overriden
+        return null;
+    }
+}

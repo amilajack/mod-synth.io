@@ -1,9 +1,11 @@
-class Spacer extends PIXI.Container
+class Spacer extends PIXI.Container {
 
-    constructor: (size) ->
-        super()
+    constructor(size) {
+        super();
 
-        @graphics = new PIXI.Graphics()
-        @graphics.beginFill 0xffffff, 0
-        @graphics.drawRect 0, 0, size, AppData.ICON_SIZE_1
-        @addChild @graphics
+        this.graphics = new PIXI.Graphics();
+        this.graphics.beginFill(0xffffff, 0);
+        this.graphics.drawRect(0, 0, size, AppData.ICON_SIZE_1);
+        this.addChild(this.graphics);
+    }
+}

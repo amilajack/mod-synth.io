@@ -1,97 +1,139 @@
-# import audio.components.Component
-class PatternGate extends Component
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS206: Consider reworking classes to avoid initClass
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import audio.components.Component
+class PatternGate extends Component {
+    static initClass() {
+    
+        this.property('pattern', {
+            get() {
+                return this.parameters.pattern;
+            },
+            set(value) {
+                if (this.parameters.pattern === value) { return this.parameters.pattern; }
+                this.parameters.pattern = value;
+                return this.parameters.pattern;
+            }
+        }
+        );
+    }
 
-    constructor: (data) ->
-        super data
+    constructor(data) {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.update = this.update.bind(this);
+        this.onSettingsChange = this.onSettingsChange.bind(this);
+        super(data);
 
-        @parameters.bypass = data.settings.bypass
-        @parameters.pattern = data.settings.pattern
+        this.parameters.bypass = data.settings.bypass;
+        this.parameters.pattern = data.settings.pattern;
 
-        App.SETTINGS_CHANGE.add @onSettingsChange
+        App.SETTINGS_CHANGE.add(this.onSettingsChange);
 
-        @lookahead = 25.0
-        @scheduleAheadTime = 0.1
-        @nextNoteTime = 0.0
+        this.lookahead = 25.0;
+        this.scheduleAheadTime = 0.1;
+        this.nextNoteTime = 0.0;
 
-        @last16thNoteDrawn = -1
-        @notesInQueue = []
+        this.last16thNoteDrawn = -1;
+        this.notesInQueue = [];
 
-        @timerWorker = new Worker 'workers/timeworker.js'
-        @timerWorker.onmessage = (e) =>
-            if e.data is 'tick'
-                @scheduler()
-            null
-        @timerWorker.postMessage { 'interval': @lookahead }
+        this.timerWorker = new Worker('workers/timeworker.js');
+        this.timerWorker.onmessage = e => {
+            if (e.data === 'tick') {
+                this.scheduler();
+            }
+            return null;
+        };
+        this.timerWorker.postMessage({ 'interval': this.lookahead });
 
-        @aux.gain.value = 0.0;
-        @play()
+        this.aux.gain.value = 0.0;
+        this.play();
+    }
 
-    destroy: ->
-        @stop()
-        null
+    destroy() {
+        this.stop();
+        return null;
+    }
 
-    nextNote: ->
-        secondsPerBeat = 60.0 / Session.BPM
-        @nextNoteTime += 0.25 * secondsPerBeat
-        @current16thNote++
-        if @current16thNote is 16
-            @current16thNote = 0
-        null
+    nextNote() {
+        const secondsPerBeat = 60.0 / Session.BPM;
+        this.nextNoteTime += 0.25 * secondsPerBeat;
+        this.current16thNote++;
+        if (this.current16thNote === 16) {
+            this.current16thNote = 0;
+        }
+        return null;
+    }
 
-    scheduleNote: (beatNumber, time) ->
-        @notesInQueue.push { note: beatNumber, time: time }
+    scheduleNote(beatNumber, time) {
+        this.notesInQueue.push({ note: beatNumber, time });
 
-        if @parameters.pattern[beatNumber] is true and Session.SETTINGS[@component_session_uid].settings.bypass is false
-            @aux.gain.setValueAtTime(1.0, time)
-            @aux.gain.linearRampToValueAtTime(0.001, time + 0.1)
-            @aux.gain.linearRampToValueAtTime(1.0, time + 0.11)
+        if ((this.parameters.pattern[beatNumber] === true) && (Session.SETTINGS[this.component_session_uid].settings.bypass === false)) {
+            this.aux.gain.setValueAtTime(1.0, time);
+            this.aux.gain.linearRampToValueAtTime(0.001, time + 0.1);
+            this.aux.gain.linearRampToValueAtTime(1.0, time + 0.11);
+        }
 
-        App.PATTERN_GATE.dispatch beatNumber
-        null
+        App.PATTERN_GATE.dispatch(beatNumber);
+        return null;
+    }
 
-    scheduler: ->
-        while @nextNoteTime < Audio.CONTEXT.currentTime + @scheduleAheadTime
-            @scheduleNote @current16thNote, @nextNoteTime
-            @nextNote()
-        null
+    scheduler() {
+        while (this.nextNoteTime < (Audio.CONTEXT.currentTime + this.scheduleAheadTime)) {
+            this.scheduleNote(this.current16thNote, this.nextNoteTime);
+            this.nextNote();
+        }
+        return null;
+    }
 
-    play: ->
-        @current16thNote = 0
-        @nextNoteTime = Audio.CONTEXT.currentTime
-        @timerWorker.postMessage 'start'
-        @doUpdate = true
-        @update()
-        null
+    play() {
+        this.current16thNote = 0;
+        this.nextNoteTime = Audio.CONTEXT.currentTime;
+        this.timerWorker.postMessage('start');
+        this.doUpdate = true;
+        this.update();
+        return null;
+    }
 
-    stop: ->
-        @timerWorker.postMessage 'stop'
-        @doUpdate = false
-        null
+    stop() {
+        this.timerWorker.postMessage('stop');
+        this.doUpdate = false;
+        return null;
+    }
 
-    update: =>
-        if @doUpdate
-            requestAnimationFrame @update
+    update() {
+        if (this.doUpdate) {
+            requestAnimationFrame(this.update);
+        }
 
-        currentNote = @last16thNoteDrawn
-        currentTime = Audio.CONTEXT.currentTime
+        let currentNote = this.last16thNoteDrawn;
+        const { currentTime } = Audio.CONTEXT;
 
-        while @notesInQueue.length and @notesInQueue[0].time < currentTime
-            currentNote = @notesInQueue[0].note
-            @notesInQueue.splice 0, 1
+        while (this.notesInQueue.length && (this.notesInQueue[0].time < currentTime)) {
+            currentNote = this.notesInQueue[0].note;
+            this.notesInQueue.splice(0, 1);
 
-            if @last16thNoteDrawn isnt currentNote
-                @last16thNoteDrawn = currentNote
-        null
+            if (this.last16thNoteDrawn !== currentNote) {
+                this.last16thNoteDrawn = currentNote;
+            }
+        }
+        return null;
+    }
 
-    onSettingsChange: (event) =>
-        if event.component is @component_session_uid
-            @pattern = Session.SETTINGS[@component_session_uid].settings.pattern
-        null
-
-    @property 'pattern',
-        get: ->
-            return @parameters.pattern
-        set: (value) ->
-            return @parameters.pattern if @parameters.pattern is value
-            @parameters.pattern = value
-            return @parameters.pattern
+    onSettingsChange(event) {
+        if (event.component === this.component_session_uid) {
+            this.pattern = Session.SETTINGS[this.component_session_uid].settings.pattern;
+        }
+        return null;
+    }
+}
+PatternGate.initClass();

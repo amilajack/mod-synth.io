@@ -1,80 +1,90 @@
-# import renderables.components.ComponentBase
-class ComponentEnv extends ComponentBase
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+// import renderables.components.ComponentBase
+class ComponentEnv extends ComponentBase {
 
-    constructor: (component_session_uid) ->
-        super component_session_uid
+    constructor(component_session_uid) {
+        super(component_session_uid);
 
-        # textures
-        @bg.texture = AppData.ASSETS.sprite.textures['comp-5-fill.png']
-        @over.texture = AppData.ASSETS.sprite.textures['comp-5-ol.png']
+        // textures
+        this.bg.texture = AppData.ASSETS.sprite.textures['comp-5-fill.png'];
+        this.over.texture = AppData.ASSETS.sprite.textures['comp-5-ol.png'];
 
-        # title
-        pos = AppData.ASSETS.sprite.data.frames['comp-5-fill.png'].sourceSize
+        // title
+        const pos = AppData.ASSETS.sprite.data.frames['comp-5-fill.png'].sourceSize;
 
-        # label
-        @label.anchor.x = 0.5
-        @label.y = pos.h/-2 + 24*AppData.RATIO
+        // label
+        this.label.anchor.x = 0.5;
+        this.label.y = (pos.h/-2) + (24*AppData.RATIO);
 
-        c = document.createElement 'canvas'
-        c.width = AppData.ICON_SIZE_2*2
-        c.height = AppData.ICON_SIZE_2*2
-        @context = c.getContext '2d'
+        const c = document.createElement('canvas');
+        c.width = AppData.ICON_SIZE_2*2;
+        c.height = AppData.ICON_SIZE_2*2;
+        this.context = c.getContext('2d');
 
-        @vertices = [
+        this.vertices = [
             { x: -0.0 * AppData.RATIO, y: -1.9 * AppData.RATIO },
             { x: 2.04 * AppData.RATIO, y: -0.35 * AppData.RATIO },
             { x: 1.25 * AppData.RATIO, y: 1.95 * AppData.RATIO },
             { x: -1.25 * AppData.RATIO, y: 1.95 * AppData.RATIO },
             { x: -2.04 * AppData.RATIO, y: -0.35 * AppData.RATIO }
-        ]
-        @change()
+        ];
+        this.change();
+    }
 
-    change: ->
-        if Session.SETTINGS[@component_session_uid].settings.bypass is true
-            @__color = 0x3C3C3C
-            @__alpha = 0.2
-            fillColor = 0x636363
-        else if Session.SETTINGS[@component_session_uid].settings.bypass is false
-            @__color = AppData.COLORS[AppData.COMPONENTS.ENV]
-            @__alpha = 1
-            fillColor = 0xffffff
+    change() {
+        let fillColor;
+        if (Session.SETTINGS[this.component_session_uid].settings.bypass === true) {
+            this.__color = 0x3C3C3C;
+            this.__alpha = 0.2;
+            fillColor = 0x636363;
+        } else if (Session.SETTINGS[this.component_session_uid].settings.bypass === false) {
+            this.__color = AppData.COLORS[AppData.COMPONENTS.ENV];
+            this.__alpha = 1;
+            fillColor = 0xffffff;
+        }
 
-        @icon.alpha = @__alpha
-        @label.alpha = @__alpha
+        this.icon.alpha = this.__alpha;
+        this.label.alpha = this.__alpha;
 
-        availableSustain = AppData.ICON_SIZE_2
-        step = AppData.ICON_SIZE_2/4
+        let availableSustain = AppData.ICON_SIZE_2;
+        const step = AppData.ICON_SIZE_2/4;
 
-        # ADSR graphic
-        x0 = 0
-        y0 = AppData.ICON_SIZE_2
-        x1 = MathUtils.map(Session.SETTINGS[@component_session_uid].settings.attack, 0, 1000, 0, step)
-        y1 = 0
-        availableSustain -= x1
-        x2 = MathUtils.map(Session.SETTINGS[@component_session_uid].settings.decay, 0, 1000, x1, x1 + step)
-        y2 = MathUtils.map(Session.SETTINGS[@component_session_uid].settings.sustain, 0, 100, AppData.ICON_SIZE_2, 0)
-        availableSustain -= (x2-x1 + MathUtils.map(Session.SETTINGS[@component_session_uid].settings.release, 0, 1000, 0, step))
-        x3 = x2 + availableSustain
-        y3 = y2
-        x4 = MathUtils.map(Session.SETTINGS[@component_session_uid].settings.release, 0, 1000, x3, x3 + step)
-        y4 = AppData.ICON_SIZE_2
+        // ADSR graphic
+        const x0 = 0;
+        const y0 = AppData.ICON_SIZE_2;
+        const x1 = MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.attack, 0, 1000, 0, step);
+        const y1 = 0;
+        availableSustain -= x1;
+        const x2 = MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.decay, 0, 1000, x1, x1 + step);
+        const y2 = MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.sustain, 0, 100, AppData.ICON_SIZE_2, 0);
+        availableSustain -= ((x2-x1) + MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.release, 0, 1000, 0, step));
+        const x3 = x2 + availableSustain;
+        const y3 = y2;
+        const x4 = MathUtils.map(Session.SETTINGS[this.component_session_uid].settings.release, 0, 1000, x3, x3 + step);
+        const y4 = AppData.ICON_SIZE_2;
 
-        # draw it to offscreen canvas
-        ix = AppData.ICON_SIZE_2/2
-        iy = AppData.ICON_SIZE_2/2
+        // draw it to offscreen canvas
+        const ix = AppData.ICON_SIZE_2/2;
+        const iy = AppData.ICON_SIZE_2/2;
 
-        @context.clearRect 0, 0, AppData.ICON_SIZE_2*2, AppData.ICON_SIZE_2*2
-        @context.strokeStyle = '#ffffff';
-        @context.lineWidth = 1.5 * AppData.RATIO
-        @context.beginPath()
-        @context.moveTo ix + x0, iy + y0
-        @context.lineTo ix + x1, iy + y1
-        @context.lineTo ix + x2, iy + y2
-        @context.lineTo ix + x3, iy + y3
-        @context.lineTo ix + x4, iy + y4
-        @context.stroke()
+        this.context.clearRect(0, 0, AppData.ICON_SIZE_2*2, AppData.ICON_SIZE_2*2);
+        this.context.strokeStyle = '#ffffff';
+        this.context.lineWidth = 1.5 * AppData.RATIO;
+        this.context.beginPath();
+        this.context.moveTo(ix + x0, iy + y0);
+        this.context.lineTo(ix + x1, iy + y1);
+        this.context.lineTo(ix + x2, iy + y2);
+        this.context.lineTo(ix + x3, iy + y3);
+        this.context.lineTo(ix + x4, iy + y4);
+        this.context.stroke();
 
-        @icon.texture = PIXI.Texture.fromCanvas @context.canvas
-        @icon.texture.update()
-        @bg.tint = @__color
-        null
+        this.icon.texture = PIXI.Texture.fromCanvas(this.context.canvas);
+        this.icon.texture.update();
+        this.bg.tint = this.__color;
+        return null;
+    }
+}

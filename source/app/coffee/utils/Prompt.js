@@ -1,136 +1,160 @@
-class Prompt
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+class Prompt {
 
-    constructor: ->
-        # builds the HTML
-        # <div class="prompt--holder">
-        #     <div class="prompt--holder-window">
-        #         <div class="prompt--holder-message">Please choose patch name:</div>
-        #         <input class="prompt--holder-input" type="text" name="fname">
-        #         <div class="prompt--holder-buttons">
-        #             <button>CANCEL</button>
-        #             <button>OK</button>
-        #         </div>
-        #     </div>
-        # </div>
+    constructor() {
+        // builds the HTML
+        // <div class="prompt--holder">
+        //     <div class="prompt--holder-window">
+        //         <div class="prompt--holder-message">Please choose patch name:</div>
+        //         <input class="prompt--holder-input" type="text" name="fname">
+        //         <div class="prompt--holder-buttons">
+        //             <button>CANCEL</button>
+        //             <button>OK</button>
+        //         </div>
+        //     </div>
+        // </div>
 
-        # Example:
-        # App.PROMPT.dispatch {
-        #     question: 'Patch name:'
-        #     input: true
-        #     onConfirm: (data) =>
-        #         null
-        # }
+        // Example:
+        // App.PROMPT.dispatch {
+        //     question: 'Patch name:'
+        //     input: true
+        //     onConfirm: (data) =>
+        //         null
+        // }
 
-        # regular expression for input field
-        @defaultREGEXP = /^.{4,}/
-        @defaultValidationMessage = 'Must have 4 or more characters'
+        // regular expression for input field
+        this.handleCancel = this.handleCancel.bind(this);
+        this.handleConfirm = this.handleConfirm.bind(this);
+        this.handleValidation = this.handleValidation.bind(this);
+        this.defaultREGEXP = /^.{4,}/;
+        this.defaultValidationMessage = 'Must have 4 or more characters';
 
-        @validateInput = false
-        @validationMessage = @defaultValidationMessage
-        @validationREGEXP = @defaultREGEXP
+        this.validateInput = false;
+        this.validationMessage = this.defaultValidationMessage;
+        this.validationREGEXP = this.defaultREGEXP;
 
-        # confirm function (set by event prop)
-        @confirmFN = null
+        // confirm function (set by event prop)
+        this.confirmFN = null;
 
-        @holder = document.createElement 'div'
-        @holder.className = 'prompt--holder'
-        document.body.appendChild @holder
+        this.holder = document.createElement('div');
+        this.holder.className = 'prompt--holder';
+        document.body.appendChild(this.holder);
 
-        @holderWindow = document.createElement 'div'
-        @holderWindow.className = 'prompt--holder-window'
-        @holder.appendChild @holderWindow
+        this.holderWindow = document.createElement('div');
+        this.holderWindow.className = 'prompt--holder-window';
+        this.holder.appendChild(this.holderWindow);
 
-        @holderMessage = document.createElement 'div'
-        @holderMessage.innerHTML = 'QUESTION?'
-        @holderMessage.className = 'prompt--holder-message'
-        @holderWindow.appendChild @holderMessage
+        this.holderMessage = document.createElement('div');
+        this.holderMessage.innerHTML = 'QUESTION?';
+        this.holderMessage.className = 'prompt--holder-message';
+        this.holderWindow.appendChild(this.holderMessage);
 
-        @holderInput = document.createElement 'input'
-        @holderInput.type = 'text'
-        @holderInput.className = 'prompt--holder-input'
-        @holderInput.style.display = 'none'
-        @holderWindow.appendChild @holderInput
+        this.holderInput = document.createElement('input');
+        this.holderInput.type = 'text';
+        this.holderInput.className = 'prompt--holder-input';
+        this.holderInput.style.display = 'none';
+        this.holderWindow.appendChild(this.holderInput);
 
-        @holderInputValidation = document.createElement 'p'
-        @holderInputValidation.className = 'prompt--holder-input-validation'
-        @holderInputValidation.style.display = 'none'
-        @holderWindow.appendChild @holderInputValidation
+        this.holderInputValidation = document.createElement('p');
+        this.holderInputValidation.className = 'prompt--holder-input-validation';
+        this.holderInputValidation.style.display = 'none';
+        this.holderWindow.appendChild(this.holderInputValidation);
 
-        @holderButtons = document.createElement 'div'
-        @holderButtons.className = 'prompt--holder-buttons'
-        @holderWindow.appendChild @holderButtons
+        this.holderButtons = document.createElement('div');
+        this.holderButtons.className = 'prompt--holder-buttons';
+        this.holderWindow.appendChild(this.holderButtons);
 
-        @cancel = document.createElement 'button'
-        @cancel.innerHTML = 'cancel'
-        @holderButtons.appendChild @cancel
+        this.cancel = document.createElement('button');
+        this.cancel.innerHTML = 'cancel';
+        this.holderButtons.appendChild(this.cancel);
 
-        @confirm = document.createElement 'button'
-        @confirm.innerHTML = 'confirm'
-        @holderButtons.appendChild @confirm
+        this.confirm = document.createElement('button');
+        this.confirm.innerHTML = 'confirm';
+        this.holderButtons.appendChild(this.confirm);
+    }
 
-    handleCancel: (e) =>
-        @hide()
-        null
+    handleCancel(e) {
+        this.hide();
+        return null;
+    }
 
-    handleConfirm: (e) =>
-        # if using validation the confirmFN will be called by validation method
-        if @handleValidation()
+    handleConfirm(e) {
+        // if using validation the confirmFN will be called by validation method
+        if (this.handleValidation()) {
 
-            if @confirmFN
-                @confirmFN @holderInput.value
-            @hide()
-        null
+            if (this.confirmFN) {
+                this.confirmFN(this.holderInput.value);
+            }
+            this.hide();
+        }
+        return null;
+    }
 
-    handleValidation: (regexp) =>
-        if @validateInput is false
-            return true
+    handleValidation(regexp) {
+        if (this.validateInput === false) {
+            return true;
+        }
 
-        # implement regexp validation and toggle warning if is not valid
-        if @defaultREGEXP.test(@holderInput.value) is false
-            @holderInputValidation.style.display = 'block'
-            @holderInputValidation.innerHTML = @validationMessage
-            return false
-        else
-            return true
+        // implement regexp validation and toggle warning if is not valid
+        if (this.defaultREGEXP.test(this.holderInput.value) === false) {
+            this.holderInputValidation.style.display = 'block';
+            this.holderInputValidation.innerHTML = this.validationMessage;
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-    show: (data) ->
-        if data.onConfirm
-            @confirmFN = data.onConfirm
+    show(data) {
+        if (data.onConfirm) {
+            this.confirmFN = data.onConfirm;
+        }
 
-        if data.question
-            @holderMessage.innerHTML = data.question
+        if (data.question) {
+            this.holderMessage.innerHTML = data.question;
+        }
 
-        if data.input
-            @holderInput.style.display = 'block'
-            @validateInput = true
-            if data.regexp
-                @validationREGEXP = data.regexp
+        if (data.input) {
+            this.holderInput.style.display = 'block';
+            this.validateInput = true;
+            if (data.regexp) {
+                this.validationREGEXP = data.regexp;
+            }
+        }
 
-        AppData.KEYPRESS_ALLOWED = false
-        TweenLite.to(@holder, 0.5, { autoAlpha: 1 })
+        AppData.KEYPRESS_ALLOWED = false;
+        TweenLite.to(this.holder, 0.5, { autoAlpha: 1 });
 
-        @cancel.addEventListener 'click', @handleCancel, false
-        @confirm.addEventListener 'click', @handleConfirm, false
-        null
+        this.cancel.addEventListener('click', this.handleCancel, false);
+        this.confirm.addEventListener('click', this.handleConfirm, false);
+        return null;
+    }
 
-    hide: ->
-        @cancel.removeEventListener 'click', @handleCancel, false
-        @confirm.removeEventListener 'click', @handleConfirm, false
-        TweenLite.to(@holder, 0.5, { autoAlpha: 0, onComplete: =>
+    hide() {
+        this.cancel.removeEventListener('click', this.handleCancel, false);
+        this.confirm.removeEventListener('click', this.handleConfirm, false);
+        TweenLite.to(this.holder, 0.5, { autoAlpha: 0, onComplete: () => {
 
-            AppData.KEYPRESS_ALLOWED = true
+            AppData.KEYPRESS_ALLOWED = true;
 
-            # reset everything
-            @holderInput.value = ''
-            @holderInput.style.display = 'none'
-            @holderInputValidation.style.display = 'none'
+            // reset everything
+            this.holderInput.value = '';
+            this.holderInput.style.display = 'none';
+            this.holderInputValidation.style.display = 'none';
 
-            @validateInput = false
-            @validationMessage = @defaultValidationMessage
-            @validationREGEXP = @defaultREGEXP
+            this.validateInput = false;
+            this.validationMessage = this.defaultValidationMessage;
+            this.validationREGEXP = this.defaultREGEXP;
 
-            @confirmFN = null
+            this.confirmFN = null;
 
-            null
-        })
-        null
+            return null;
+        }
+        });
+        return null;
+    }
+}
