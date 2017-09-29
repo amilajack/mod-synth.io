@@ -4,15 +4,14 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 class Analytics {
-
-    static event(category, type, id) {
-        if (window.ga) {
-            if (id) {
-                ga('send', 'event', category, type, id);
-            } else {
-                ga('send', 'event', category, type);
-            }
-        }
-        return null;
+  static event(category, type, id) {
+    if (window.ga) {
+      if (id) {
+        ga("send", "event", category, type, id);
+      } else {
+        ga("send", "event", category, type);
+      }
     }
+    return null;
+  }
 }

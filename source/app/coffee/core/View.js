@@ -5,26 +5,31 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 class View extends PIXI.Container {
-
-    constructor() {
-        {
-          // Hack: trick Babel/TypeScript into allowing this before super.
-          if (false) { super(); }
-          let thisFn = (() => { this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
-          eval(`${thisName} = this;`);
-        }
-        this.onResize = this.onResize.bind(this);
+  constructor() {
+    {
+      // Hack: trick Babel/TypeScript into allowing this before super.
+      if (false) {
         super();
-
-        App.RESIZE.add(this.onResize);
+      }
+      let thisFn = (() => {
+        this;
+      }).toString();
+      let thisName = thisFn
+        .slice(thisFn.indexOf("{") + 1, thisFn.indexOf(";"))
+        .trim();
+      eval(`${thisName} = this;`);
     }
+    this.onResize = this.onResize.bind(this);
+    super();
 
-    onResize() {
-        return null;
-    }
+    App.RESIZE.add(this.onResize);
+  }
 
-    update() {
-        return null;
-    }
+  onResize() {
+    return null;
+  }
+
+  update() {
+    return null;
+  }
 }

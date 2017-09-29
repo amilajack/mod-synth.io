@@ -16,11 +16,10 @@
 // import utils.Utils
 
 Function.prototype.property = function(prop, desc) {
-    return Object.defineProperty(this.prototype, prop, desc);
+  return Object.defineProperty(this.prototype, prop, desc);
 };
 
 class Base {
-
-    constructor() {}
+  constructor() {}
 }
-        // empty
+// empty

@@ -1,5 +1,6 @@
-.sass-cache/
-node_modules/
-deploy/
+.sass-cache
+node_modules
+deploy
+_static
 
 TODO.md

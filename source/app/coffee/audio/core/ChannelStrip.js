@@ -6,40 +6,40 @@
  */
 // TODO: http://stackoverflow.com/questions/20287890/audiocontext-panning-audio-of-playing-media
 class ChannelStrip {
+  constructor() {
+    // channel strip output
+    this.output = Audio.CONTEXT.createGain();
+    this.output.gain.value = 0.4;
 
-    constructor() {
+    // channel strip input
+    this.input = Audio.CONTEXT.createGain();
+    this.input.connect(this.output);
+  }
+  // @setVolume 0.8
 
-        // channel strip output
-        this.output = Audio.CONTEXT.createGain();
-        this.output.gain.value = 0.4;
-
-        // channel strip input
-        this.input = Audio.CONTEXT.createGain();
-        this.input.connect(this.output);
+  setVolume(value, linear) {
+    if (linear == null) {
+      linear = false;
     }
-        // @setVolume 0.8
+    let volume = value;
 
-    setVolume(value, linear) {
-        if (linear == null) { linear = false; }
-        let volume = value;
-
-        if (!linear) {
-            volume = Math.pow(volume/1, 2);
-        }
-
-        if (this.input) {
-            this.input.gain.value = volume;
-        }
-        return null;
+    if (!linear) {
+      volume = Math.pow(volume / 1, 2);
     }
 
-    connect(otherDeviceInput) {
-        this.output.connect(otherDeviceInput);
-        return null;
+    if (this.input) {
+      this.input.gain.value = volume;
     }
+    return null;
+  }
 
-    disconnect() {
-        this.output.disconnect();
-        return null;
-    }
+  connect(otherDeviceInput) {
+    this.output.connect(otherDeviceInput);
+    return null;
+  }
+
+  disconnect() {
+    this.output.disconnect();
+    return null;
+  }
 }
